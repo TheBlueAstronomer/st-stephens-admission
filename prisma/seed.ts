@@ -1,6 +1,6 @@
 import 'dotenv/config';
-import { PrismaClient } from '../src/generated/prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
+import {PrismaClient} from '@/generated/prisma/client';
+import {PrismaPg} from '@prisma/adapter-pg';
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
@@ -73,12 +73,11 @@ async function main() {
   const dioceseNames = ['Oxford', 'London', 'Canterbury', 'York', 'Durham', 'Chelmsford'];
   const dioceses: Record<string, { id: string }> = {};
   for (const name of dioceseNames) {
-    const d = await prisma.diocese.upsert({
-      where: { name },
+    dioceses[name] = await prisma.diocese.upsert({
+      where: {name},
       update: {},
-      create: { name, isActive: true },
+      create: {name, isActive: true},
     });
-    dioceses[name] = d;
   }
   console.log(`  ✓ Dioceses: ${dioceseNames.join(', ')}`);
 
@@ -95,8 +94,7 @@ async function main() {
     if (existing) {
       programmeRecords[p.courseTitle] = existing;
     } else {
-      const created = await prisma.academicProgramme.create({ data: p });
-      programmeRecords[p.courseTitle] = created;
+      programmeRecords[p.courseTitle] = await prisma.academicProgramme.create({data: p});
     }
   }
   console.log(`  ✓ Programmes: ${programmes.map((p) => p.courseTitle).join(', ')}`);
@@ -196,6 +194,52 @@ async function main() {
     });
 
     console.log(`  ✓ ${a.applicantId} — ${a.legalName} (${a.status})`);
+  }
+
+  // ─── Sample Interviews ──────────────────────────────────────────────────
+
+  console.log('\n🌱 Seeding sample interviews...\n');
+
+  // Find Michael Johnson (INTERVIEW_SCHEDULED) and Bob Academic (interviewer)
+  const michaelApplicant = await prisma.applicant.findFirst({
+    where: { applicantId: 'SSH-2025-0003' },
+  });
+  const bobUser = await prisma.user.findFirst({
+    where: { email: 'bob@ssh-dev.local' },
+  });
+  const aliceUser = await prisma.user.findFirst({
+    where: { email: 'alice@ssh-dev.local' },
+  });
+
+  if (michaelApplicant && bobUser && aliceUser) {
+    const existingInterview = await prisma.interview.findFirst({
+      where: { applicantId: michaelApplicant.id },
+    });
+
+    if (!existingInterview) {
+      const interview = await prisma.interview.create({
+        data: {
+          applicantId: michaelApplicant.id,
+          interviewType: 'VISIT_INTERVIEW',
+          scheduledAt: new Date('2025-07-20T10:00:00Z'),
+          status: 'SCHEDULED',
+          invitationSentAt: new Date('2025-06-15T09:00:00Z'),
+          invitationSentByUserId: aliceUser.id,
+          createdByUserId: aliceUser.id,
+        },
+      });
+
+      await prisma.interviewPanel.create({
+        data: {
+          interviewId: interview.id,
+          userId: bobUser.id,
+        },
+      });
+
+      console.log(`  ✓ Interview for ${michaelApplicant.applicantId} — Visit-Interview on 20 Jul 2025, panel: Bob Academic`);
+    } else {
+      console.log(`  ⊘ Interview for ${michaelApplicant.applicantId} already exists, skipping`);
+    }
   }
 
   console.log('\n✅ Seed complete. Dev login available at /dev/login\n');

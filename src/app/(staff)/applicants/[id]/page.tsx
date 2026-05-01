@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { auth } from '@/lib/auth';
 import { getApplicantById } from '@/lib/queries/applicants';
+import { getAcademicStaffUsers } from '@/lib/queries/interviews';
 import { ApplicantDetailView } from '@/components/applicant-detail-view';
 
 interface ApplicantDetailPageProps {
@@ -22,5 +23,14 @@ export default async function ApplicantDetailPage({
 
   const canEdit = role === 'ADMISSIONS_STAFF' || role === 'SYSTEM_ADMINISTRATOR';
 
-  return <ApplicantDetailView applicant={applicant} canEdit={canEdit} />;
+  // Fetch available interviewers for scheduling dialog
+  const availableInterviewers = canEdit ? await getAcademicStaffUsers() : [];
+
+  return (
+    <ApplicantDetailView
+      applicant={applicant}
+      canEdit={canEdit}
+      availableInterviewers={availableInterviewers}
+    />
+  );
 }

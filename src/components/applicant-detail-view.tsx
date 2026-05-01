@@ -4,16 +4,23 @@ import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-  CheckCircle,
-  Circle,
-  ArrowRight,
-  CalendarBlank,
+  CheckCircleIcon,
+  CircleIcon,
+  ArrowRightIcon,
+  CalendarBlankIcon,
+  FileTextIcon,
+  PaperPlaneTiltIcon,
+  UserCircleIcon,
+  PlaceholderIcon,
 } from '@phosphor-icons/react';
 import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert } from '@/components/ui/alert';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
+import { Label } from '@/components/ui/label';
 import {
   PROGRESS_STAGES,
   isStatusAtOrPast,
@@ -21,17 +28,27 @@ import {
 } from '@/lib/constants/applicant-status';
 import { VALID_TRANSITIONS } from '@/lib/business-rules/status-transitions';
 import { updateApplicantStatus } from '@/app/(staff)/applicants/actions';
+import { markInvitationSent, markApplicationReceived } from '@/app/(staff)/interviews/actions';
+import { ScheduleInterviewDialog } from '@/components/schedule-interview-dialog';
 import type { ApplicantStatus, AuditAction } from '@/generated/prisma/client';
+import { toast } from 'sonner';
 
 type ApplicantFull = NonNullable<Awaited<ReturnType<typeof import('@/lib/queries/applicants').getApplicantById>>>;
+
+interface AvailableInterviewer {
+  id: string;
+  name: string;
+  email: string;
+}
 
 interface ApplicantDetailViewProps {
   applicant: ApplicantFull;
   canEdit: boolean;
+  availableInterviewers?: AvailableInterviewer[];
 }
 
-export function ApplicantDetailView({ applicant, canEdit }: ApplicantDetailViewProps) {
-  const [activeTab, setActiveTab] = useState('personal');
+export function ApplicantDetailView({ applicant, canEdit, availableInterviewers = [] }: ApplicantDetailViewProps) {
+  const [activeTab, setActiveTab] = useState<string>('personal');
   const [isPending, startTransition] = useTransition();
   const [statusError, setStatusError] = useState<string | null>(null);
   const router = useRouter();
@@ -59,18 +76,6 @@ export function ApplicantDetailView({ applicant, canEdit }: ApplicantDetailViewP
     });
   };
 
-  const tabs = [
-    { id: 'personal', label: 'Personal' },
-    { id: 'ecclesial', label: 'Ecclesial' },
-    { id: 'bap', label: 'BAP' },
-    { id: 'interview', label: 'Interview' },
-    { id: 'offer', label: 'Offer' },
-    { id: 'registration', label: 'Registration' },
-    { id: 'documents', label: 'Documents' },
-    { id: 'notes', label: 'Notes' },
-    { id: 'timeline', label: 'Timeline' },
-  ];
-
   return (
     <div className="space-y-4">
       {/* Breadcrumb */}
@@ -84,7 +89,7 @@ export function ApplicantDetailView({ applicant, canEdit }: ApplicantDetailViewP
 
       <div className="flex gap-6">
         {/* Left column — dark navy sidebar panel */}
-        <div className="w-[280px] shrink-0 sticky top-6 self-start space-y-0 rounded-2xl bg-[#1A2744] text-white overflow-hidden shadow-lg shadow-[#1A2744]/20">
+        <div className="w-70 shrink-0 sticky top-6 self-start space-y-0 rounded-2xl bg-[#1A2744] text-white overflow-hidden shadow-lg shadow-[#1A2744]/20">
           {/* Avatar and identity */}
           <div className="p-6 space-y-4">
             <Avatar className="h-16 w-16 mx-auto ring-2 ring-white/20">
@@ -121,11 +126,11 @@ export function ApplicantDetailView({ applicant, canEdit }: ApplicantDetailViewP
                   {/* Icon + connecting line */}
                   <div className="flex flex-col items-center">
                     {isCompleted ? (
-                      <CheckCircle size={18} weight="fill" className="text-emerald-400 shrink-0" />
+                      <CheckCircleIcon size={18} weight="fill" className="text-emerald-400 shrink-0" />
                     ) : isCurrent ? (
-                      <div className="h-[18px] w-[18px] rounded-full border-2 border-white bg-white/20 shrink-0" />
+                      <div className="h-4.5 w-4.5 rounded-full border-2 border-white bg-white/20 shrink-0" />
                     ) : (
-                      <Circle size={18} weight="light" className="text-white/25 shrink-0" />
+                      <CircleIcon size={18} weight="light" className="text-white/25 shrink-0" />
                     )}
                     {!isLast && (
                       <div className={`w-px flex-1 my-1 ${isCompleted ? 'bg-emerald-400/40' : 'bg-white/10'}`} />
@@ -170,7 +175,7 @@ export function ApplicantDetailView({ applicant, canEdit }: ApplicantDetailViewP
                     disabled={isPending}
                     onClick={() => handleAdvanceStatus(target)}
                   >
-                    <ArrowRight size={14} weight="light" className="mr-2" />
+                    <ArrowRightIcon size={14} weight="light" className="mr-2" />
                     {STATUS_LABELS[target]}
                   </Button>
                 ))}
@@ -196,35 +201,31 @@ export function ApplicantDetailView({ applicant, canEdit }: ApplicantDetailViewP
 
         {/* Right content */}
         <div className="flex-1 min-w-0">
-          {/* Tabs */}
-          <div className="flex gap-0.5 overflow-x-auto mb-6 bg-[#F8F7F5] rounded-xl p-1">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-2 text-sm font-medium whitespace-nowrap transition-all rounded-lg ${
-                  activeTab === tab.id
-                    ? 'bg-white text-[#1A2744] shadow-sm shadow-black/[0.06]'
-                    : 'text-muted-foreground hover:text-[#1A2744]'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
+          <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val)} className="gap-6">
+            <TabsList className="overflow-x-auto rounded-xl">
+              <TabsTrigger value="personal">Personal</TabsTrigger>
+              <TabsTrigger value="ecclesial">Ecclesial</TabsTrigger>
+              <TabsTrigger value="bap">BAP</TabsTrigger>
+              <TabsTrigger value="interview">Interview</TabsTrigger>
+              <TabsTrigger value="offer">Offer</TabsTrigger>
+              <TabsTrigger value="registration">Registration</TabsTrigger>
+              <TabsTrigger value="documents">Documents</TabsTrigger>
+              <TabsTrigger value="notes">Notes</TabsTrigger>
+              <TabsTrigger value="timeline">Timeline</TabsTrigger>
+            </TabsList>
 
-          {/* Tab content */}
-          <div className="rounded-2xl border border-black/[0.06] bg-white p-6 shadow-sm shadow-black/[0.03]">
-            {activeTab === 'personal' && <PersonalTab applicant={applicant} />}
-            {activeTab === 'ecclesial' && <EcclesialTab applicant={applicant} />}
-            {activeTab === 'bap' && <BAPTab applicant={applicant} />}
-            {activeTab === 'interview' && <InterviewTab applicant={applicant} />}
-            {activeTab === 'offer' && <OfferTab applicant={applicant} />}
-            {activeTab === 'registration' && <RegistrationTab applicant={applicant} />}
-            {activeTab === 'documents' && <DocumentsTab applicant={applicant} />}
-            {activeTab === 'notes' && <NotesTab applicant={applicant} />}
-            {activeTab === 'timeline' && <TimelineTab applicant={applicant} />}
-          </div>
+            <div className="rounded-2xl border border-black/6 bg-white p-6 shadow-sm shadow-black/3">
+              <TabsContent value="personal"><PersonalTab applicant={applicant} /></TabsContent>
+              <TabsContent value="ecclesial"><EcclesialTab applicant={applicant} /></TabsContent>
+              <TabsContent value="bap"><BAPTab applicant={applicant} /></TabsContent>
+              <TabsContent value="interview"><InterviewTab applicant={applicant} canEdit={canEdit} availableInterviewers={availableInterviewers} /></TabsContent>
+              <TabsContent value="offer"><OfferTab applicant={applicant} /></TabsContent>
+              <TabsContent value="registration"><RegistrationTab applicant={applicant} /></TabsContent>
+              <TabsContent value="documents"><DocumentsTab applicant={applicant} /></TabsContent>
+              <TabsContent value="notes"><NotesTab applicant={applicant} /></TabsContent>
+              <TabsContent value="timeline"><TimelineTab applicant={applicant} /></TabsContent>
+            </div>
+          </Tabs>
         </div>
       </div>
     </div>
@@ -236,13 +237,13 @@ export function ApplicantDetailView({ applicant, canEdit }: ApplicantDetailViewP
 function PersonalTab({ applicant }: { applicant: ApplicantFull }) {
   return (
     <dl className="grid grid-cols-2 gap-x-8 gap-y-4">
-      <Field label="Legal Name" value={applicant.legalName} />
-      <Field label="Preferred Name" value={applicant.preferredName} />
-      <Field label="Date of Birth" value={applicant.dateOfBirth ? new Date(applicant.dateOfBirth).toLocaleDateString('en-GB') : null} />
-      <Field label="Email" value={applicant.email} />
-      <Field label="Phone" value={applicant.phone} />
-      <Field label="Address" value={[applicant.addressLineOne, applicant.addressLineTwo, applicant.city, applicant.postcode, applicant.country].filter(Boolean).join(', ') || null} />
-      <Field label="Programme" value={applicant.programme?.courseTitle} />
+      <DetailField label="Legal Name" value={applicant.legalName} />
+      <DetailField label="Preferred Name" value={applicant.preferredName} />
+      <DetailField label="Date of Birth" value={applicant.dateOfBirth ? new Date(applicant.dateOfBirth).toLocaleDateString('en-GB') : null} />
+      <DetailField label="Email" value={applicant.email} />
+      <DetailField label="Phone" value={applicant.phone} />
+      <DetailField label="Address" value={[applicant.addressLineOne, applicant.addressLineTwo, applicant.city, applicant.postcode, applicant.country].filter(Boolean).join(', ') || null} />
+      <DetailField label="Programme" value={applicant.programme?.courseTitle} />
     </dl>
   );
 }
@@ -251,12 +252,12 @@ function EcclesialTab({ applicant }: { applicant: ApplicantFull }) {
   const ep = applicant.ecclesialProfile;
   return (
     <dl className="grid grid-cols-2 gap-x-8 gap-y-4">
-      <Field label="Diocese" value={applicant.diocese?.name} />
-      <Field label="DDO Name" value={ep?.directorOfOrdinandsName} />
-      <Field label="DDO Email" value={ep?.directorOfOrdinandsEmail} />
-      <Field label="DDO Phone" value={ep?.directorOfOrdinandsPhone} />
-      <Field label="Sponsoring Bishop" value={ep?.sponsoringBishopName} />
-      <Field label="Bishop Email" value={ep?.sponsoringBishopEmail} />
+      <DetailField label="Diocese" value={applicant.diocese?.name} />
+      <DetailField label="DDO Name" value={ep?.directorOfOrdinandsName} />
+      <DetailField label="DDO Email" value={ep?.directorOfOrdinandsEmail} />
+      <DetailField label="DDO Phone" value={ep?.directorOfOrdinandsPhone} />
+      <DetailField label="Sponsoring Bishop" value={ep?.sponsoringBishopName} />
+      <DetailField label="Bishop Email" value={ep?.sponsoringBishopEmail} />
     </dl>
   );
 }
@@ -266,10 +267,10 @@ function BAPTab({ applicant }: { applicant: ApplicantFull }) {
   return (
     <div className="space-y-4">
       <dl className="grid grid-cols-2 gap-x-8 gap-y-4">
-        <Field label="Stage 1 Status" value={bap?.stageOneStatus} />
-        <Field label="Stage 1 Date" value={bap?.stageOneDate ? new Date(bap.stageOneDate).toLocaleDateString('en-GB') : null} />
-        <Field label="Stage 2 Status" value={bap?.stageTwoStatus} />
-        <Field label="Stage 2 Date" value={bap?.stageTwoDate ? new Date(bap.stageTwoDate).toLocaleDateString('en-GB') : null} />
+        <DetailField label="Stage 1 Status" value={bap?.stageOneStatus} />
+        <DetailField label="Stage 1 Date" value={bap?.stageOneDate ? new Date(bap.stageOneDate).toLocaleDateString('en-GB') : null} />
+        <DetailField label="Stage 2 Status" value={bap?.stageTwoStatus} />
+        <DetailField label="Stage 2 Date" value={bap?.stageTwoDate ? new Date(bap.stageTwoDate).toLocaleDateString('en-GB') : null} />
       </dl>
       {applicant.hasStageOneBAPException && (
         <Alert className="border-amber-200 bg-amber-50 text-amber-800">
@@ -286,32 +287,197 @@ function BAPTab({ applicant }: { applicant: ApplicantFull }) {
   );
 }
 
-function InterviewTab({ applicant }: { applicant: ApplicantFull }) {
-  if (applicant.interviews.length === 0) {
-    return <EmptyState message="No interviews recorded yet." />;
-  }
+function InterviewTab({
+  applicant,
+  canEdit,
+  availableInterviewers,
+}: {
+  applicant: ApplicantFull;
+  canEdit: boolean;
+  availableInterviewers: AvailableInterviewer[];
+}) {
+  const [showScheduleDialog, setShowScheduleDialog] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
+
+  const handleMarkInvitationSent = (interviewId: string) => {
+    startTransition(async () => {
+      const result = await markInvitationSent(interviewId);
+      if (result.success) {
+        toast.success('Invitation marked as sent.');
+        router.refresh();
+      } else {
+        toast.error(result.error ?? 'Failed to mark invitation.');
+      }
+    });
+  };
+
+  const handleMarkApplicationReceived = (interviewId: string) => {
+    startTransition(async () => {
+      const result = await markApplicationReceived(interviewId);
+      if (result.success) {
+        toast.success('Application marked as received.');
+        router.refresh();
+      } else {
+        toast.error(result.error ?? 'Failed to mark application.');
+      }
+    });
+  };
+
   return (
     <div className="space-y-4">
-      {applicant.interviews.map((interview) => (
-        <div key={interview.id} className="rounded-2xl border border-black/[0.06] bg-[#FAFAF9] p-4 space-y-2">
-          <div className="flex items-center justify-between">
-            <Badge>{interview.interviewType.replace('_', ' ')}</Badge>
-            <Badge variant="outline">{interview.status}</Badge>
-          </div>
-          {interview.scheduledAt && (
-            <p className="text-sm text-muted-foreground">
-              <CalendarBlank size={14} weight="light" className="inline mr-1" />
-              {new Date(interview.scheduledAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
-            </p>
-          )}
-          {interview.outcome && (
-            <p className="text-sm">Outcome: <strong>{interview.outcome}</strong></p>
-          )}
-          {interview.notes && (
-            <p className="text-sm text-muted-foreground">{interview.notes}</p>
-          )}
+      {/* Header with schedule button */}
+      {canEdit && (
+        <div className="flex justify-end">
+          <Button
+            className="rounded-full bg-[#1A2744] hover:bg-[#1A2744]/90 text-white"
+            onClick={() => setShowScheduleDialog(true)}
+          >
+            <CalendarBlankIcon size={16} weight="light" className="mr-2" />
+            Schedule Interview
+          </Button>
         </div>
-      ))}
+      )}
+
+      {applicant.interviews.length === 0 ? (
+        <EmptyState message="No interviews recorded yet." />
+      ) : (
+        applicant.interviews.map((interview) => (
+          <div key={interview.id} className="rounded-2xl border border-black/6 bg-[#FAFAF9] p-4 space-y-3">
+            {/* Header row */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Badge className="border-0 bg-[#1A2744] text-white text-xs">
+                  {interview.interviewType === 'EXPLORATORY_VISIT' ? 'Exploratory Visit' : 'Visit-Interview'}
+                </Badge>
+                <Badge
+                  variant="outline"
+                  className={`text-xs ${
+                    interview.status === 'COMPLETED'
+                      ? 'border-green-300 text-green-800 bg-green-50'
+                      : interview.status === 'SCHEDULED'
+                        ? 'border-blue-300 text-blue-800 bg-blue-50'
+                        : interview.status === 'CANCELLED'
+                          ? 'border-red-300 text-red-800 bg-red-50'
+                          : ''
+                  }`}
+                >
+                  {interview.status}
+                </Badge>
+              </div>
+              <Link
+                href={`/interviews/${interview.id}`}
+                className="text-xs font-medium text-[#1A2744] hover:underline"
+              >
+                View Details →
+              </Link>
+            </div>
+
+            {/* Date */}
+            {interview.scheduledAt && (
+              <p className="text-sm text-muted-foreground">
+                <CalendarBlankIcon size={14} weight="light" className="inline mr-1" />
+                {new Date(interview.scheduledAt).toLocaleDateString('en-GB', {
+                  weekday: 'long',
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                })}
+                {' at '}
+                {new Date(interview.scheduledAt).toLocaleTimeString('en-GB', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </p>
+            )}
+
+            {/* Panel members */}
+            {'panelMembers' in interview && Array.isArray((interview as Record<string, unknown>).panelMembers) && ((interview as Record<string, unknown>).panelMembers as { user: { id: string; name: string } }[]).length > 0 && (
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <UserCircleIcon size={14} weight="light" />
+                <span>Panel: </span>
+                {((interview as Record<string, unknown>).panelMembers as { user: { id: string; name: string } }[]).map((pm, idx, arr) => (
+                  <span key={pm.user.id}>
+                    {pm.user.name}{idx < arr.length - 1 ? ', ' : ''}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Tracking badges */}
+            <div className="flex items-center gap-2 flex-wrap">
+              {interview.invitationSentAt ? (
+                <Badge className="border-0 bg-green-100 text-green-800 text-xs">
+                  <PaperPlaneTiltIcon size={12} weight="fill" className="mr-1" />
+                  Invitation Sent {new Date(interview.invitationSentAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                </Badge>
+              ) : canEdit && interview.status === 'SCHEDULED' ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-xs text-muted-foreground hover:text-[#1A2744]"
+                  disabled={isPending}
+                  onClick={() => handleMarkInvitationSent(interview.id)}
+                >
+                  <PaperPlaneTiltIcon size={12} weight="light" className="mr-1" />
+                  Mark Invitation Sent
+                </Button>
+              ) : null}
+
+              {interview.interviewApplicationReceivedAt ? (
+                <Badge className="border-0 bg-green-100 text-green-800 text-xs">
+                  <FileTextIcon size={12} weight="fill" className="mr-1" />
+                  Application Received {new Date(interview.interviewApplicationReceivedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                </Badge>
+              ) : canEdit && interview.status === 'SCHEDULED' ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-xs text-muted-foreground hover:text-[#1A2744]"
+                  disabled={isPending}
+                  onClick={() => handleMarkApplicationReceived(interview.id)}
+                >
+                  <FileTextIcon size={12} weight="light" className="mr-1" />
+                  Mark Application Received
+                </Button>
+              ) : null}
+            </div>
+
+            {/* Outcome */}
+            {interview.outcome && (
+              <div className="rounded-lg bg-white border border-black/4 p-3 text-sm">
+                <p className="font-medium">
+                  Outcome:{' '}
+                  <span className={
+                    interview.outcome === 'RECOMMENDED'
+                      ? 'text-green-700'
+                      : interview.outcome === 'NOT_RECOMMENDED'
+                        ? 'text-red-700'
+                        : 'text-amber-700'
+                  }>
+                    {interview.outcome.replace('_', ' ')}
+                  </span>
+                </p>
+                {interview.notes && (
+                  <p className="text-muted-foreground mt-1">{interview.notes}</p>
+                )}
+              </div>
+            )}
+          </div>
+        ))
+      )}
+
+      {/* Schedule Interview Dialog */}
+      <ScheduleInterviewDialog
+        open={showScheduleDialog}
+        onOpenChange={setShowScheduleDialog}
+        applicantId={applicant.id}
+        applicantName={applicant.preferredName ?? applicant.legalName}
+        applicantDisplayId={applicant.applicantId}
+        bapStageOneStatus={applicant.bapStatus?.stageOneStatus ?? null}
+        hasStageOneBAPException={applicant.hasStageOneBAPException}
+        availableInterviewers={availableInterviewers}
+      />
     </div>
   );
 }
@@ -323,10 +489,10 @@ function OfferTab({ applicant }: { applicant: ApplicantFull }) {
   const o = applicant.offer;
   return (
     <dl className="grid grid-cols-2 gap-x-8 gap-y-4">
-      <Field label="Offer Type" value={o.offerType} />
-      <Field label="Decision Date" value={o.decisionDate ? new Date(o.decisionDate).toLocaleDateString('en-GB') : null} />
-      <Field label="Conditions" value={o.conditions} />
-      <Field label="Decision Notes" value={o.decisionNotes} />
+      <DetailField label="Offer Type" value={o.offerType} />
+      <DetailField label="Decision Date" value={o.decisionDate ? new Date(o.decisionDate).toLocaleDateString('en-GB') : null} />
+      <DetailField label="Conditions" value={o.conditions} />
+      <DetailField label="Decision Notes" value={o.decisionNotes} />
     </dl>
   );
 }
@@ -338,12 +504,12 @@ function RegistrationTab({ applicant }: { applicant: ApplicantFull }) {
   const r = applicant.registration;
   return (
     <dl className="grid grid-cols-2 gap-x-8 gap-y-4">
-      <Field label="Form Received" value={r.registrationFormReceivedAt ? new Date(r.registrationFormReceivedAt).toLocaleDateString('en-GB') : null} />
-      <Field label="Contact Confirmed" value={r.contactDetailsConfirmed ? 'Yes' : 'No'} />
-      <Field label="Programme Confirmed" value={r.programmeConfirmed ? 'Yes' : 'No'} />
-      <Field label="Bishop Confirmed" value={r.bishopDetailsConfirmed ? 'Yes' : 'No'} />
-      <Field label="Documents Submitted" value={r.areSupportingDocumentsSubmitted ? 'Yes' : 'No'} />
-      <Field label="Electronic Signature" value={r.electronicSignature ? 'Yes' : 'No'} />
+      <DetailField label="Form Received" value={r.registrationFormReceivedAt ? new Date(r.registrationFormReceivedAt).toLocaleDateString('en-GB') : null} />
+      <DetailField label="Contact Confirmed" value={r.contactDetailsConfirmed ? 'Yes' : 'No'} />
+      <DetailField label="Programme Confirmed" value={r.programmeConfirmed ? 'Yes' : 'No'} />
+      <DetailField label="Bishop Confirmed" value={r.bishopDetailsConfirmed ? 'Yes' : 'No'} />
+      <DetailField label="Documents Submitted" value={r.areSupportingDocumentsSubmitted ? 'Yes' : 'No'} />
+      <DetailField label="Electronic Signature" value={r.electronicSignature ? 'Yes' : 'No'} />
     </dl>
   );
 }
@@ -355,7 +521,7 @@ function DocumentsTab({ applicant }: { applicant: ApplicantFull }) {
   return (
     <div className="space-y-2">
       {applicant.documents.map((doc) => (
-        <div key={doc.id} className="flex items-center justify-between rounded-2xl border border-black/[0.06] bg-[#FAFAF9] p-3.5">
+        <div key={doc.id} className="flex items-center justify-between rounded-2xl border border-black/6 bg-[#FAFAF9] p-3.5">
           <div>
             <p className="text-sm font-medium">{doc.documentType?.name ?? doc.fileName ?? 'Unknown Document'}</p>
             {doc.notes && <p className="text-xs text-muted-foreground">{doc.notes}</p>}
@@ -382,10 +548,10 @@ function TimelineTab({ applicant }: { applicant: ApplicantFull }) {
     return <EmptyState message="No audit entries yet." />;
   }
   return (
-    <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+    <div className="space-y-3 max-h-125 overflow-y-auto pr-1">
       {applicant.auditLogs.map((log) => (
         <div key={log.id} className="flex gap-3 text-sm border-l-2 border-[#1A2744]/10 pl-3">
-          <span className="shrink-0 font-mono text-xs text-muted-foreground w-[130px]">
+          <span className="shrink-0 font-mono text-xs text-muted-foreground w-32.5">
             {new Date(log.performedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
             {' '}
             {new Date(log.performedAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
@@ -396,7 +562,7 @@ function TimelineTab({ applicant }: { applicant: ApplicantFull }) {
             <span className="text-muted-foreground">{formatAction(log.action)}</span>
             {log.previousValue && log.newValue && (
               <span className="text-muted-foreground">
-                : {log.previousValue} <ArrowRight size={12} weight="light" className="inline" /> {log.newValue}
+                : {log.previousValue} <ArrowRightIcon size={12} weight="light" className="inline" /> {log.newValue}
               </span>
             )}
             {!log.previousValue && log.newValue && (
@@ -411,10 +577,14 @@ function TimelineTab({ applicant }: { applicant: ApplicantFull }) {
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-function Field({ label, value }: { label: string; value?: string | null }) {
+function DetailField({ label, value }: { label: string; value?: string | null }) {
   return (
     <div>
-      <dt className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{label}</dt>
+      <dt>
+        <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">
+          {label}
+        </Label>
+      </dt>
       <dd className="mt-1 text-sm text-[#1A2744] font-medium">{value || '—'}</dd>
     </div>
   );
@@ -422,12 +592,14 @@ function Field({ label, value }: { label: string; value?: string | null }) {
 
 function EmptyState({ message }: { message: string }) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-sm text-muted-foreground">
-      <div className="h-10 w-10 rounded-full bg-[#F8F7F5] flex items-center justify-center mb-3">
-        <Circle size={20} weight="light" className="text-muted-foreground/40" />
-      </div>
-      {message}
-    </div>
+    <Empty className="py-16">
+      <EmptyHeader>
+        <EmptyMedia variant="icon">
+          <PlaceholderIcon size={20} weight="light" />
+        </EmptyMedia>
+        <EmptyTitle>{message}</EmptyTitle>
+      </EmptyHeader>
+    </Empty>
   );
 }
 
@@ -441,6 +613,9 @@ function formatAction(action: AuditAction): string {
     DOCUMENT_RECEIVED: 'received document',
     DOCUMENT_WAIVED: 'waived document',
     INTERVIEW_OUTCOME: 'recorded interview outcome',
+    INTERVIEW_SCHEDULED: 'scheduled interview',
+    INVITATION_SENT: 'marked invitation as sent',
+    APPLICATION_RECEIVED: 'marked application as received',
     CONFIRMED_ORDINAND: 'confirmed ordinand status',
   };
   return map[action] ?? action;

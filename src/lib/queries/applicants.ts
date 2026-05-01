@@ -60,7 +60,14 @@ export async function getApplicantById(id: string) {
       accommodationRequest: true,
       documents: { include: { documentType: true } },
       interviews: {
-        include: { createdBy: true, updatedBy: true },
+        include: {
+          createdBy: true,
+          updatedBy: true,
+          invitationSentBy: { select: { id: true, name: true } },
+          panelMembers: {
+            include: { user: { select: { id: true, name: true, email: true } } },
+          },
+        },
         orderBy: { createdAt: 'desc' },
       },
       auditLogs: {

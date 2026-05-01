@@ -123,7 +123,7 @@ describe('US-01: Prisma Schema Enums', () => {
     expect(Object.values(ModeOfStudy)).toHaveLength(3);
   });
 
-  it('AuditAction has 9 values', () => {
+  it('AuditAction has 12 values', () => {
     const expected = [
       'CREATE',
       'UPDATE',
@@ -134,9 +134,12 @@ describe('US-01: Prisma Schema Enums', () => {
       'DOCUMENT_WAIVED',
       'INTERVIEW_OUTCOME',
       'CONFIRMED_ORDINAND',
+      'INTERVIEW_SCHEDULED',
+      'INVITATION_SENT',
+      'APPLICATION_RECEIVED',
     ];
     expect(Object.values(AuditAction)).toEqual(expect.arrayContaining(expected));
-    expect(Object.values(AuditAction)).toHaveLength(9);
+    expect(Object.values(AuditAction)).toHaveLength(12);
   });
 });
 

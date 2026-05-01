@@ -12,9 +12,10 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Allow static assets and Next.js internals
+  // Allow static assets and Next.js internals (including Turbopack HMR)
   if (
     pathname.startsWith('/_next') ||
+    pathname.startsWith('/__next') ||
     pathname.startsWith('/favicon') ||
     pathname.includes('.')
   ) {
@@ -43,10 +44,10 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization)
+     * - _next (all Next.js internals: static files, HMR, RSC payloads, etc.)
      * - favicon.ico (favicon)
+     * - public assets with file extensions (e.g. .svg, .png)
      */
-    '/((?!_next/static|_next/image|favicon.ico).*)',
+    '/((?!_next|__next|favicon.ico|.*\\..*).*)',
   ],
 };

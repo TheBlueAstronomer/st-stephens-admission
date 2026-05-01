@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useState, useTransition } from 'react';
-import { MagnifyingGlass, X, DownloadSimple } from '@phosphor-icons/react';
+import { MagnifyingGlassIcon, XIcon, DownloadSimpleIcon } from '@phosphor-icons/react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -80,11 +80,11 @@ export function ApplicantFilterBar({
   const statuses = Object.entries(STATUS_LABELS);
 
   return (
-    <div className="sticky top-0 z-10 space-y-3 rounded-2xl bg-white p-4 border border-black/[0.06] shadow-sm shadow-black/[0.03]">
+    <div className="sticky top-0 z-10 space-y-3 rounded-2xl bg-white p-4 border border-black/6 shadow-sm shadow-black/3">
       <div className="flex flex-wrap items-center gap-2">
         {/* Search */}
-        <div className="relative flex-1 min-w-[240px]">
-          <MagnifyingGlass
+        <div className="relative flex-1 min-w-60">
+          <MagnifyingGlassIcon
             size={15}
             weight="light"
             className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
@@ -103,7 +103,7 @@ export function ApplicantFilterBar({
         <select
           value={filters.status ?? ''}
           onChange={(e) => updateFilter('status', e.target.value || undefined)}
-          className="h-9 rounded-full border border-black/[0.08] bg-[#F8F7F5] px-3 py-1.5 text-sm text-muted-foreground hover:border-[#1A2744]/20 focus:border-[#1A2744]/30 focus:outline-none transition-colors cursor-pointer"
+          className="h-9 rounded-full border border-black/8 bg-[#F8F7F5] px-3 py-1.5 text-sm text-muted-foreground hover:border-[#1A2744]/20 focus:border-[#1A2744]/30 focus:outline-none transition-colors cursor-pointer"
         >
           <option value="">All Statuses</option>
           {statuses.map(([value, label]) => (
@@ -117,7 +117,7 @@ export function ApplicantFilterBar({
         <select
           value={filters.admissionsYearId ?? ''}
           onChange={(e) => updateFilter('admissionsYearId', e.target.value || undefined)}
-          className="h-9 rounded-full border border-black/[0.08] bg-[#F8F7F5] px-3 py-1.5 text-sm text-muted-foreground hover:border-[#1A2744]/20 focus:border-[#1A2744]/30 focus:outline-none transition-colors cursor-pointer"
+          className="h-9 rounded-full border border-black/8 bg-[#F8F7F5] px-3 py-1.5 text-sm text-muted-foreground hover:border-[#1A2744]/20 focus:border-[#1A2744]/30 focus:outline-none transition-colors cursor-pointer"
         >
           <option value="">All Years</option>
           {referenceData.admissionsYears.map((y) => (
@@ -131,7 +131,7 @@ export function ApplicantFilterBar({
         <select
           value={filters.programmeId ?? ''}
           onChange={(e) => updateFilter('programmeId', e.target.value || undefined)}
-          className="h-9 rounded-full border border-black/[0.08] bg-[#F8F7F5] px-3 py-1.5 text-sm text-muted-foreground hover:border-[#1A2744]/20 focus:border-[#1A2744]/30 focus:outline-none transition-colors cursor-pointer"
+          className="h-9 rounded-full border border-black/8 bg-[#F8F7F5] px-3 py-1.5 text-sm text-muted-foreground hover:border-[#1A2744]/20 focus:border-[#1A2744]/30 focus:outline-none transition-colors cursor-pointer"
         >
           <option value="">All Programmes</option>
           {referenceData.programmes.map((p) => (
@@ -149,7 +149,7 @@ export function ApplicantFilterBar({
             className="ml-auto text-muted-foreground hover:text-[#1A2744]"
             onClick={handleExport}
           >
-            <DownloadSimple size={15} weight="light" className="mr-1.5" />
+            <DownloadSimpleIcon size={15} weight="light" className="mr-1.5" />
             Export
           </Button>
         )}
@@ -172,7 +172,7 @@ export function ApplicantFilterBar({
                 }}
                 className="ml-1.5 rounded-full p-0.5 hover:bg-black/10"
               >
-                <X size={12} />
+                <XIcon size={12} />
               </button>
             </Badge>
           ))}

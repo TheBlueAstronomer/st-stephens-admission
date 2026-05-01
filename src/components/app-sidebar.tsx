@@ -4,12 +4,12 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import {
-  House,
-  Users,
-  CalendarBlank,
-  ChartBar,
-  Gear,
-  SignOut,
+  HouseIcon,
+  UsersIcon,
+  CalendarBlankIcon,
+  ChartBarIcon,
+  GearIcon,
+  SignOutIcon,
 } from '@phosphor-icons/react';
 import {
   Sidebar,
@@ -33,12 +33,12 @@ import {
 import { getNavItemsForRole } from '@/lib/rbac';
 import type { UserRole } from '@/generated/prisma/client';
 
-const ICON_MAP: Record<string, React.ComponentType<React.ComponentProps<typeof House>>> = {
-  House,
-  Users,
-  CalendarBlank,
-  ChartBar,
-  Gear,
+const ICON_MAP: Record<string, React.ComponentType<React.ComponentProps<typeof HouseIcon>>> = {
+  House: HouseIcon,
+  Users: UsersIcon,
+  CalendarBlank: CalendarBlankIcon,
+  ChartBar: ChartBarIcon,
+  Gear: GearIcon,
 };
 
 const ROLE_BADGE_COLORS: Record<UserRole, string> = {
@@ -145,7 +145,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
               onClick={() => signOut({ callbackUrl: '/login' })}
               className="text-destructive focus:text-destructive"
             >
-              <SignOut size={16} weight="light" className="mr-2" />
+              <SignOutIcon size={16} weight="light" className="mr-2" />
               Sign out
             </DropdownMenuItem>
           </DropdownMenuContent>

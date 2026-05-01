@@ -10,7 +10,9 @@ import { validateBAPGate } from '@/lib/business-rules/bap-gate';
 import {
   isValidTransition,
   requiresBAPCheck,
+  requiresInterviewCheck,
 } from '@/lib/business-rules/status-transitions';
+import { validateInterviewGate } from '@/lib/business-rules/interview-gate';
 import { buildWhereClause } from '@/lib/queries/applicant-filters';
 import type { ApplicantStatus, BAPStageStatus } from '@/generated/prisma/client';
 
@@ -206,6 +208,19 @@ export async function updateApplicantStatus(
           },
         });
       });
+    }
+  }
+
+  // Interview gate check for offer statuses (US-10)
+  if (requiresInterviewCheck(targetStatus)) {
+    const interviews = await prisma.interview.findMany({
+      where: { applicantId },
+      select: { status: true },
+    });
+
+    const gateResult = validateInterviewGate(interviews);
+    if (!gateResult.allowed) {
+      return { success: false, error: gateResult.reason };
     }
   }
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { signOut } from 'next-auth/react';
-import { MagnifyingGlass } from '@phosphor-icons/react';
+import { MagnifyingGlassIcon } from '@phosphor-icons/react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -38,7 +38,7 @@ export function AppTopbar({ user }: AppTopbarProps) {
     .slice(0, 2);
 
   return (
-    <header className="flex h-14 items-center gap-4 border-b border-black/[0.06] bg-white/80 backdrop-blur-sm px-4">
+    <header className="flex h-14 items-center gap-4 border-b border-black/6 bg-white/80 backdrop-blur-sm px-4">
       <SidebarTrigger className="-ml-1" />
       <Separator orientation="vertical" className="h-5" />
 
@@ -53,7 +53,7 @@ export function AppTopbar({ user }: AppTopbarProps) {
 
       <div className="ml-auto flex items-center gap-2">
         <Button variant="ghost" size="icon-sm" aria-label="Search applicants">
-          <MagnifyingGlass size={18} weight="light" />
+          <MagnifyingGlassIcon size={18} weight="light" />
         </Button>
 
         <DropdownMenu>

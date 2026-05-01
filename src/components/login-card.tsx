@@ -4,7 +4,7 @@ import { signIn } from 'next-auth/react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { WarningCircle } from '@phosphor-icons/react';
+import { WarningCircleIcon } from '@phosphor-icons/react';
 
 const ERROR_MESSAGES: Record<string, string> = {
   unauthorized:
@@ -29,9 +29,9 @@ export function LoginCard({ error, callbackUrl }: LoginCardProps) {
   return (
     <div className="w-full max-w-sm">
       {/* Double-Bezel outer shell */}
-      <div className="rounded-[2rem] bg-black/[0.04] p-2 ring-1 ring-black/[0.06]">
+      <div className="rounded-[2rem] bg-black/4 p-2 ring-1 ring-black/6">
         {/* Inner core */}
-        <Card className="rounded-[calc(2rem-0.5rem)] border-0 bg-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.9)]">
+        <Card className="rounded-[1.5rem] border-0 bg-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.9)]">
           <CardHeader className="flex flex-col items-center gap-4 pb-2 pt-8">
             <Badge
               variant="secondary"
@@ -86,7 +86,7 @@ export function LoginCard({ error, callbackUrl }: LoginCardProps) {
             {errorMessage && (
               <div className="animate-in fade-in slide-in-from-top-2 duration-300">
                 <Alert variant="destructive" className="border-[#C0392B]/20 bg-[#C0392B]/5">
-                  <WarningCircle size={16} weight="light" className="text-[#C0392B]" />
+                  <WarningCircleIcon size={16} weight="light" className="text-[#C0392B]" />
                   <AlertDescription className="text-sm text-[#C0392B]">
                     {errorMessage}
                   </AlertDescription>

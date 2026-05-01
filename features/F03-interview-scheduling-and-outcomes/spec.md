@@ -18,14 +18,14 @@ Enable admissions staff to schedule interviews and assign interviewers, and enab
 
 ## Acceptance Criteria
 
-- [ ] Admissions staff can schedule an interview by selecting type, date, time, and assigned interviewer; the applicant status transitions to `INTERVIEW_SCHEDULED`.
-- [ ] Scheduling is blocked when Stage 1 BAP status is incomplete or missing, and the block is surfaced with a clear validation message, unless a BAP exception is on record.
-- [ ] Assigning an academic staff member to an interview grants that user access to the interview record and the applicant's interview-relevant details.
-- [ ] Academic staff can open their assigned interview, enter notes, and record an outcome; the applicant status transitions to `INTERVIEW_COMPLETED`.
-- [ ] Academic staff cannot access interview records they are not assigned to.
-- [ ] Recording an outcome without a scheduled interview date is blocked server-side.
-- [ ] Invitation sent date, timestamp, and sending user are recorded when an invitation action is performed.
-- [ ] Interview application received timestamp is recorded when the form receipt is marked.
-- [ ] The interview record is visible in the applicant detail screen audit timeline.
-- [ ] All interview state changes write entries to the `AuditLog`.
-- [ ] Unit tests cover scheduling validation rules; integration tests cover the full schedule → outcome flow for each interview type.
+- [x] Admissions staff can schedule an interview by selecting type, date, time, and assigned interviewer; the applicant status transitions to `INTERVIEW_SCHEDULED`.
+- [x] Scheduling is blocked when Stage 1 BAP status is incomplete or missing, and the block is surfaced with a clear validation message, unless a BAP exception is on record.
+- [x] Assigning an academic staff member to an interview grants that user access to the interview record and the applicant's interview-relevant details.
+- [x] Academic staff can open their assigned interview, enter notes, and record an outcome; the applicant status transitions to `INTERVIEW_COMPLETED`.
+- [x] Academic staff cannot access interview records they are not assigned to.
+- [x] Recording an outcome without a scheduled interview date is blocked server-side.
+- [x] Invitation sent date, timestamp, and sending user are recorded when an invitation action is performed.
+- [x] Interview application received timestamp is recorded when the form receipt is marked.
+- [x] The interview record is visible in the applicant detail screen audit timeline.
+- [x] All interview state changes write entries to the `AuditLog`.
+- [x] Unit tests cover scheduling validation rules; integration tests cover the full schedule → outcome flow for each interview type.

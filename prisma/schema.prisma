@@ -105,6 +105,9 @@ enum AuditAction {
   DOCUMENT_RECEIVED
   DOCUMENT_WAIVED
   INTERVIEW_OUTCOME
+  INTERVIEW_SCHEDULED
+  INVITATION_SENT
+  APPLICATION_RECEIVED
   CONFIRMED_ORDINAND
 }
 
@@ -131,6 +134,7 @@ model User {
   interviewsCreated     Interview[]  @relation("InterviewCreatedBy")
   interviewsUpdated     Interview[]  @relation("InterviewUpdatedBy")
   invitationsSent       Interview[]  @relation("InvitationSentBy")
+  interviewPanels       InterviewPanel[]
 }
 
 /// Auth.js Account model (required by @auth/prisma-adapter).
@@ -278,10 +282,26 @@ model Interview {
   createdAt                     DateTime         @default(now())
   updatedAt                     DateTime         @updatedAt
 
+  followUpActions                String?
+
   applicant       Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
   invitationSentBy User?    @relation("InvitationSentBy", fields: [invitationSentByUserId], references: [id])
   createdBy       User?     @relation("InterviewCreatedBy", fields: [createdByUserId], references: [id])
   updatedBy       User?     @relation("InterviewUpdatedBy", fields: [updatedByUserId], references: [id])
+  panelMembers    InterviewPanel[]
+}
+
+/// Join table for Interview ↔ User (panel members / assigned interviewers).
+model InterviewPanel {
+  id          String @id @default(cuid())
+  interviewId String
+  userId      String
+  assignedAt  DateTime @default(now())
+
+  interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([interviewId, userId])
 }
 
 /// PRD §6.6 — Admissions decision and offer details.

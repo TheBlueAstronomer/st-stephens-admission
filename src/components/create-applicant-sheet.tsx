@@ -4,7 +4,6 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { SpinnerGap } from '@phosphor-icons/react';
 import {
   Sheet,
   SheetContent,
@@ -15,7 +14,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert } from '@/components/ui/alert';
-import { Separator } from '@/components/ui/separator';
+import { Label } from '@/components/ui/label';
+import { Field, FieldError, FieldSeparator } from '@/components/ui/field';
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { Spinner } from '@/components/ui/spinner';
 import {
   createApplicantSchema,
   type CreateApplicantInput,
@@ -85,7 +87,7 @@ export function CreateApplicantSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-[480px] overflow-y-auto rounded-l-[1.5rem] bg-[#FAFAF9] px-6 pb-8">
+      <SheetContent side="right" className="w-120 overflow-y-auto rounded-l-[1.5rem] bg-[#FAFAF9] px-6 pb-8">
         <SheetHeader className="mb-6 px-0">
           <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
             Applicant Management
@@ -113,130 +115,142 @@ export function CreateApplicantSheet({
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Personal */}
           <div>
-            <SectionLabel>Personal</SectionLabel>
-            <div className="space-y-3">
-              <FormField label="Legal Name *" error={errors.legalName?.message}>
+            <FieldSeparator>Personal</FieldSeparator>
+            <div className="mt-3 space-y-3">
+              <Field>
+                <Label className="text-sm text-[#1A2744]/80">Legal Name *</Label>
                 <Input {...register('legalName')} placeholder="Full legal name" />
-              </FormField>
-              <FormField label="Preferred Name" error={errors.preferredName?.message}>
+                {errors.legalName?.message && <FieldError>{errors.legalName.message}</FieldError>}
+              </Field>
+              <Field>
+                <Label className="text-sm text-[#1A2744]/80">Preferred Name</Label>
                 <Input {...register('preferredName')} placeholder="Preferred name" />
-              </FormField>
-              <FormField label="Date of Birth" error={errors.dateOfBirth?.message}>
+                {errors.preferredName?.message && <FieldError>{errors.preferredName.message}</FieldError>}
+              </Field>
+              <Field>
+                <Label className="text-sm text-[#1A2744]/80">Date of Birth</Label>
                 <Input {...register('dateOfBirth')} type="date" />
-              </FormField>
-              <FormField label="Email *" error={errors.email?.message}>
+                {errors.dateOfBirth?.message && <FieldError>{errors.dateOfBirth.message}</FieldError>}
+              </Field>
+              <Field>
+                <Label className="text-sm text-[#1A2744]/80">Email *</Label>
                 <Input {...register('email')} type="email" placeholder="applicant@example.com" />
-              </FormField>
-              <FormField label="Phone" error={errors.phone?.message}>
+                {errors.email?.message && <FieldError>{errors.email.message}</FieldError>}
+              </Field>
+              <Field>
+                <Label className="text-sm text-[#1A2744]/80">Phone</Label>
                 <Input {...register('phone')} placeholder="+44 ..." />
-              </FormField>
+                {errors.phone?.message && <FieldError>{errors.phone.message}</FieldError>}
+              </Field>
             </div>
           </div>
 
           {/* Address */}
           <div>
-            <SectionLabel>Address</SectionLabel>
-            <div className="space-y-3">
-              <FormField label="Address Line 1">
+            <FieldSeparator>Address</FieldSeparator>
+            <div className="mt-3 space-y-3">
+              <Field>
+                <Label className="text-sm text-[#1A2744]/80">Address Line 1</Label>
                 <Input {...register('addressLineOne')} />
-              </FormField>
+              </Field>
               <div className="grid grid-cols-2 gap-3">
-                <FormField label="City">
+                <Field>
+                  <Label className="text-sm text-[#1A2744]/80">City</Label>
                   <Input {...register('city')} />
-                </FormField>
-                <FormField label="Postcode">
+                </Field>
+                <Field>
+                  <Label className="text-sm text-[#1A2744]/80">Postcode</Label>
                   <Input {...register('postcode')} />
-                </FormField>
+                </Field>
               </div>
-              <FormField label="Country">
+              <Field>
+                <Label className="text-sm text-[#1A2744]/80">Country</Label>
                 <Input {...register('country')} />
-              </FormField>
+              </Field>
             </div>
           </div>
 
           {/* Ecclesial */}
           <div>
-            <SectionLabel>Ecclesial</SectionLabel>
-            <div className="space-y-3">
-              <FormField label="Diocese" error={errors.dioceseId?.message}>
-                <select
-                  {...register('dioceseId')}
-                  className="flex h-10 w-full rounded-xl border border-black/[0.08] bg-white px-3 py-2 text-sm focus:border-[#1A2744]/30 focus:outline-none transition-colors"
-                >
-                  <option value="">Select diocese...</option>
+            <FieldSeparator>Ecclesial</FieldSeparator>
+            <div className="mt-3 space-y-3">
+              <Field>
+                <Label className="text-sm text-[#1A2744]/80">Diocese</Label>
+                <NativeSelect {...register('dioceseId')} className="w-full">
+                  <NativeSelectOption value="">Select diocese...</NativeSelectOption>
                   {referenceData.dioceses.map((d) => (
-                    <option key={d.id} value={d.id}>
+                    <NativeSelectOption key={d.id} value={d.id}>
                       {d.name}
-                    </option>
+                    </NativeSelectOption>
                   ))}
-                </select>
-              </FormField>
-              <FormField label="DDO Name">
+                </NativeSelect>
+                {errors.dioceseId?.message && <FieldError>{errors.dioceseId.message}</FieldError>}
+              </Field>
+              <Field>
+                <Label className="text-sm text-[#1A2744]/80">DDO Name</Label>
                 <Input {...register('directorOfOrdinandsName')} />
-              </FormField>
-              <FormField label="DDO Email">
+              </Field>
+              <Field>
+                <Label className="text-sm text-[#1A2744]/80">DDO Email</Label>
                 <Input {...register('directorOfOrdinandsEmail')} type="email" />
-              </FormField>
+              </Field>
             </div>
           </div>
 
           {/* BAP */}
           <div>
-            <SectionLabel>BAP</SectionLabel>
-            <div className="space-y-3">
-              <FormField label="Stage 1 Status">
-                <select
-                  {...register('stageOneStatus')}
-                  className="flex h-10 w-full rounded-xl border border-black/[0.08] bg-white px-3 py-2 text-sm focus:border-[#1A2744]/30 focus:outline-none transition-colors"
-                >
-                  <option value="">Select status...</option>
-                  <option value="INCOMPLETE">Incomplete</option>
-                  <option value="SCHEDULED">Scheduled</option>
-                  <option value="COMPLETED">Completed</option>
-                  <option value="NOT_APPLICABLE">Not Applicable</option>
-                </select>
-              </FormField>
-              <FormField label="Stage 1 Date">
+            <FieldSeparator>BAP</FieldSeparator>
+            <div className="mt-3 space-y-3">
+              <Field>
+                <Label className="text-sm text-[#1A2744]/80">Stage 1 Status</Label>
+                <NativeSelect {...register('stageOneStatus')} className="w-full">
+                  <NativeSelectOption value="">Select status...</NativeSelectOption>
+                  <NativeSelectOption value="INCOMPLETE">Incomplete</NativeSelectOption>
+                  <NativeSelectOption value="SCHEDULED">Scheduled</NativeSelectOption>
+                  <NativeSelectOption value="COMPLETED">Completed</NativeSelectOption>
+                  <NativeSelectOption value="NOT_APPLICABLE">Not Applicable</NativeSelectOption>
+                </NativeSelect>
+              </Field>
+              <Field>
+                <Label className="text-sm text-[#1A2744]/80">Stage 1 Date</Label>
                 <Input {...register('stageOneDate')} type="date" />
-              </FormField>
+              </Field>
             </div>
           </div>
 
           {/* Programme */}
           <div>
-            <SectionLabel>Programme</SectionLabel>
-            <div className="space-y-3">
-              <FormField label="Programme *" error={errors.programmeId?.message}>
-                <select
-                  {...register('programmeId')}
-                  className="flex h-10 w-full rounded-xl border border-black/[0.08] bg-white px-3 py-2 text-sm focus:border-[#1A2744]/30 focus:outline-none transition-colors"
-                >
-                  <option value="">Select programme...</option>
+            <FieldSeparator>Programme</FieldSeparator>
+            <div className="mt-3 space-y-3">
+              <Field>
+                <Label className="text-sm text-[#1A2744]/80">Programme *</Label>
+                <NativeSelect {...register('programmeId')} className="w-full">
+                  <NativeSelectOption value="">Select programme...</NativeSelectOption>
                   {referenceData.programmes.map((p) => (
-                    <option key={p.id} value={p.id}>
+                    <NativeSelectOption key={p.id} value={p.id}>
                       {p.courseTitle}
-                    </option>
+                    </NativeSelectOption>
                   ))}
-                </select>
-              </FormField>
-              <FormField label="Admissions Year *" error={errors.admissionsYearId?.message}>
-                <select
-                  {...register('admissionsYearId')}
-                  className="flex h-10 w-full rounded-xl border border-black/[0.08] bg-white px-3 py-2 text-sm focus:border-[#1A2744]/30 focus:outline-none transition-colors"
-                >
-                  <option value="">Select year...</option>
+                </NativeSelect>
+                {errors.programmeId?.message && <FieldError>{errors.programmeId.message}</FieldError>}
+              </Field>
+              <Field>
+                <Label className="text-sm text-[#1A2744]/80">Admissions Year *</Label>
+                <NativeSelect {...register('admissionsYearId')} className="w-full">
+                  <NativeSelectOption value="">Select year...</NativeSelectOption>
                   {referenceData.admissionsYears.map((y) => (
-                    <option key={y.id} value={y.id}>
+                    <NativeSelectOption key={y.id} value={y.id}>
                       {y.label}
-                    </option>
+                    </NativeSelectOption>
                   ))}
-                </select>
-              </FormField>
+                </NativeSelect>
+                {errors.admissionsYearId?.message && <FieldError>{errors.admissionsYearId.message}</FieldError>}
+              </Field>
             </div>
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end gap-3 pt-5 border-t border-black/[0.06]">
+          <div className="flex justify-end gap-3 pt-5 border-t border-black/6">
             <Button
               type="button"
               variant="ghost"
@@ -254,7 +268,7 @@ export function CreateApplicantSheet({
               className="rounded-full bg-[#1A2744] text-white hover:bg-[#23304d] shadow-sm shadow-[#1A2744]/20 px-6"
             >
               {isPending && (
-                <SpinnerGap size={16} className="mr-2 animate-spin" />
+                <Spinner className="mr-2" />
               )}
               Create Applicant
             </Button>
@@ -265,38 +279,3 @@ export function CreateApplicantSheet({
   );
 }
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="mb-3 flex items-center gap-3">
-      <Separator className="flex-1 bg-black/[0.06]" />
-      <span className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground">
-        {children}
-      </span>
-      <Separator className="flex-1 bg-black/[0.06]" />
-    </div>
-  );
-}
-
-function FormField({
-  label,
-  error,
-  children,
-}: {
-  label: string;
-  error?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <label className="mb-1.5 block text-sm font-medium text-[#1A2744]/80">
-        {label}
-      </label>
-      {children}
-      {error && (
-        <p className="mt-1 text-xs text-destructive animate-in fade-in">
-          {error}
-        </p>
-      )}
-    </div>
-  );
-}

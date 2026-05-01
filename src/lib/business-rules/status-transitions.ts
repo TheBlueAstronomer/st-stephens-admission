@@ -71,3 +71,18 @@ export function isValidTransition(
 export function requiresBAPCheck(targetStatus: ApplicantStatus): boolean {
   return STATUSES_REQUIRING_BAP_CHECK.includes(targetStatus);
 }
+
+/**
+ * Statuses that require at least one completed interview (interview gate).
+ */
+export const STATUSES_REQUIRING_INTERVIEW_CHECK: ApplicantStatus[] = [
+  'CONDITIONAL_OFFER',
+  'UNCONDITIONAL_OFFER',
+];
+
+/**
+ * Whether the target status requires the interview gate validation.
+ */
+export function requiresInterviewCheck(targetStatus: ApplicantStatus): boolean {
+  return STATUSES_REQUIRING_INTERVIEW_CHECK.includes(targetStatus);
+}

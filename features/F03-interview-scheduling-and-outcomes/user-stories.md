@@ -15,10 +15,10 @@
 - **Test**: Assert the Interview record contains the correct `interviewType`, `scheduledAt`, and assigned interviewer.
 
 ### Acceptance Criteria
-- [ ] An Interview record is created linked to the applicant.
-- [ ] The applicant status transitions to `INTERVIEW_SCHEDULED`.
-- [ ] The interview type is one of `EXPLORATORY_VISIT` or `VISIT_INTERVIEW`.
-- [ ] An `AuditLog` entry is created for the scheduling action.
+- [x] An Interview record is created linked to the applicant.
+- [x] The applicant status transitions to `INTERVIEW_SCHEDULED`.
+- [x] The interview type is one of `EXPLORATORY_VISIT` or `VISIT_INTERVIEW`.
+- [x] An `AuditLog` entry is created for the scheduling action.
 
 ### Implementation Steps
 1. **Create a Zod schema** — `src/lib/validations/interview.ts` requiring `interviewType` (enum), `scheduledAt` (datetime), and `interviewerIds` (array of user IDs).
@@ -50,9 +50,9 @@ Create `e2e/f03-interview-scheduling.spec.ts`:
 - **Test**: Schedule for an applicant with BAP `INCOMPLETE` but a recorded BAP exception; assert it succeeds.
 
 ### Acceptance Criteria
-- [ ] Scheduling is blocked when BAP status is incomplete or missing.
-- [ ] A clear validation message explains the block.
-- [ ] A BAP exception on record bypasses the block.
+- [x] Scheduling is blocked when BAP status is incomplete or missing.
+- [x] A clear validation message explains the block.
+- [x] A BAP exception on record bypasses the block.
 
 ### Implementation Steps
 1. **Integrate `validateBAPGate()`** — at the top of `scheduleInterview`, call the BAP gate utility from `src/lib/business-rules/bap-gate.ts` (built in F02-US-07). If blocked, return the validation message.
@@ -73,10 +73,10 @@ Create `e2e/f03-interview-scheduling.spec.ts`:
 - **Test**: Call the action as a different academic staff member (not assigned); assert it is rejected (403).
 
 ### Acceptance Criteria
-- [ ] The assigned interviewer can enter notes and record an outcome.
-- [ ] The interview status transitions to `COMPLETED`.
-- [ ] The applicant status transitions to `INTERVIEW_COMPLETED`.
-- [ ] An `AuditLog` entry is created.
+- [x] The assigned interviewer can enter notes and record an outcome.
+- [x] The interview status transitions to `COMPLETED`.
+- [x] The applicant status transitions to `INTERVIEW_COMPLETED`.
+- [x] An `AuditLog` entry is created.
 
 ### Implementation Steps
 1. **Create the `recordInterviewOutcome` server action** — `src/app/(staff)/interviews/[id]/actions.ts`. Apply `requireRole('ACADEMIC_STAFF', 'ADMISSIONS_STAFF')`. Accept `notes`, `outcome` (enum: `RECOMMEND`, `FURTHER_CONSIDERATION`, `NOT_RECOMMENDED`), and `followUpActions`.
@@ -100,8 +100,8 @@ Create `e2e/f03-interview-scheduling.spec.ts`:
 - **Test**: Create an Interview record without a `scheduledAt` date; attempt to record an outcome; assert it is blocked server-side with a descriptive error.
 
 ### Acceptance Criteria
-- [ ] Recording an outcome without a scheduled interview date is blocked server-side.
-- [ ] The error message clearly states that an interview must be scheduled first.
+- [x] Recording an outcome without a scheduled interview date is blocked server-side.
+- [x] The error message clearly states that an interview must be scheduled first.
 
 ### Implementation Steps
 1. **Add a guard in `recordInterviewOutcome`** — at the top of the action, check that `interview.scheduledAt` is not null. If null, return a descriptive error: "An interview must be scheduled before recording an outcome."
@@ -122,9 +122,9 @@ Create `e2e/f03-interview-scheduling.spec.ts`:
 - **Test**: Request the interview as `ADMISSIONS_STAFF`; assert 200 (admissions staff have full access).
 
 ### Acceptance Criteria
-- [ ] Academic staff can only view and edit interviews they are assigned to.
-- [ ] Admissions staff can access all interview records.
-- [ ] Unassigned academic staff receive a 403 response.
+- [x] Academic staff can only view and edit interviews they are assigned to.
+- [x] Admissions staff can access all interview records.
+- [x] Unassigned academic staff receive a 403 response.
 
 ### Implementation Steps
 1. **Create an `authorizeInterviewAccess()` utility** — `src/lib/business-rules/interview-access.ts`. Accepts `userId`, `userRole`, and `interviewId`. Returns `allowed: boolean`.
@@ -153,8 +153,8 @@ Add to `e2e/f03-interview-scheduling.spec.ts`:
 - **Test**: Assert the response does NOT include sensitive fields not required for interview (e.g., full address, DBS details).
 
 ### Acceptance Criteria
-- [ ] The interview detail screen shows relevant applicant information.
-- [ ] Sensitive fields beyond interview scope are not exposed to academic staff.
+- [x] The interview detail screen shows relevant applicant information.
+- [x] Sensitive fields beyond interview scope are not exposed to academic staff.
 
 ### Implementation Steps
 1. **Build the applicant summary card** — in the Interview Detail right panel, render a read-only `Card` (Double-Bezel) showing: Name, Diocese, Programme, BAP status, DDO name.
@@ -177,9 +177,9 @@ Add to `e2e/f03-interview-scheduling.spec.ts`:
 - **Test**: Assert an `AuditLog` entry is created for the invitation.
 
 ### Acceptance Criteria
-- [ ] `invitationSentAt` timestamp is recorded.
-- [ ] `invitationSentByUserId` is recorded as the current user.
-- [ ] An `AuditLog` entry records the invitation event.
+- [x] `invitationSentAt` timestamp is recorded.
+- [x] `invitationSentByUserId` is recorded as the current user.
+- [x] An `AuditLog` entry records the invitation event.
 
 ### Implementation Steps
 1. **Create the `markInvitationSent` server action** — `requireRole('ADMISSIONS_STAFF')`. Update `Interview` record: set `invitationSentAt = new Date()` and `invitationSentByUserId = session.user.id`.
@@ -201,9 +201,9 @@ Add to `e2e/f03-interview-scheduling.spec.ts`:
 - **Test**: Assert the applicant status transitions to `INTERVIEW_APPLICATION_RECEIVED` if appropriate.
 
 ### Acceptance Criteria
-- [ ] `interviewApplicationReceivedAt` timestamp is recorded.
-- [ ] Applicant status updates to `INTERVIEW_APPLICATION_RECEIVED` when appropriate.
-- [ ] An `AuditLog` entry is created.
+- [x] `interviewApplicationReceivedAt` timestamp is recorded.
+- [x] Applicant status updates to `INTERVIEW_APPLICATION_RECEIVED` when appropriate.
+- [x] An `AuditLog` entry is created.
 
 ### Implementation Steps
 1. **Create the `markApplicationReceived` server action** — `requireRole('ADMISSIONS_STAFF')`. Update `Interview` record: set `interviewApplicationReceivedAt = new Date()`. If appropriate, transition applicant status to `INTERVIEW_APPLICATION_RECEIVED`.
@@ -225,8 +225,8 @@ Add to `e2e/f03-interview-scheduling.spec.ts`:
 - **Test**: Seed an interview with all fields populated; render the detail screen; assert all fields are displayed: linked applicant, type, date/time, assigned interviewer, status, notes, outcome, and follow-up actions.
 
 ### Acceptance Criteria
-- [ ] The interview detail screen displays all fields from PRD §5.5.
-- [ ] The interview record is visible in the applicant detail screen's audit timeline.
+- [x] The interview detail screen displays all fields from PRD §5.5.
+- [x] The interview record is visible in the applicant detail screen's audit timeline.
 
 ### Implementation Steps
 1. **Create the interview detail page** — `src/app/(staff)/interviews/[id]/page.tsx`. Fetch the interview with related applicant, assigned interviewers, and audit log entries.
@@ -259,9 +259,9 @@ Create `e2e/f03-interview-detail.spec.ts`:
 - **Test**: Complete the interview; attempt to create offer; assert it succeeds.
 
 ### Acceptance Criteria
-- [ ] Offer decision is blocked when a required interview is not completed.
-- [ ] Marking interview as `NOT_REQUIRED` bypasses the gate.
-- [ ] Completed interviews allow progression to offer decision.
+- [x] Offer decision is blocked when a required interview is not completed.
+- [x] Marking interview as `NOT_REQUIRED` bypasses the gate.
+- [x] Completed interviews allow progression to offer decision.
 
 ### Implementation Steps
 1. **Create `validateInterviewGate()` utility** — `src/lib/business-rules/interview-gate.ts`. Accepts applicant ID, queries their interview records. Returns `{ allowed: boolean, reason?: string }`.
