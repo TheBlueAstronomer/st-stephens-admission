@@ -1,0 +1,408 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ──────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  ADMISSIONS_STAFF
+  ACADEMIC_STAFF
+  SENIOR_LEADERSHIP
+  SYSTEM_ADMINISTRATOR
+}
+
+enum ApplicantStatus {
+  ENQUIRY
+  VISIT_INVITED
+  INTERVIEW_APPLICATION_RECEIVED
+  INTERVIEW_SCHEDULED
+  INTERVIEW_COMPLETED
+  CONDITIONAL_OFFER
+  UNCONDITIONAL_OFFER
+  DECLINED
+  WITHDRAWN
+  REGISTRATION_FORM_RECEIVED
+  DOCUMENTS_COMPLETE
+  CONFIRMED_ORDINAND
+}
+
+enum BAPStageStatus {
+  COMPLETED
+  SCHEDULED
+  INCOMPLETE
+  NOT_APPLICABLE
+}
+
+enum InterviewType {
+  EXPLORATORY_VISIT
+  VISIT_INTERVIEW
+}
+
+enum InterviewStatus {
+  REQUIRED
+  NOT_REQUIRED
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+enum InterviewOutcome {
+  RECOMMENDED
+  NOT_RECOMMENDED
+  DEFERRED
+  WITHDRAWN
+}
+
+enum OfferType {
+  CONDITIONAL
+  UNCONDITIONAL
+  DECLINED
+  WITHDRAWN
+}
+
+enum AccommodationType {
+  SINGLE
+  FAMILY
+}
+
+enum AccommodationDuration {
+  TERM_TIME
+  FULL_YEAR
+}
+
+enum DocumentStatus {
+  REQUIRED
+  RECEIVED
+  OUTSTANDING
+  WAIVED
+}
+
+enum AwardingFramework {
+  COMMON_AWARDS
+  OXFORD
+}
+
+enum ModeOfStudy {
+  FULL_TIME
+  PART_TIME
+  OTHER
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  STATUS_CHANGE
+  OFFER_DECISION
+  DOCUMENT_RECEIVED
+  DOCUMENT_WAIVED
+  INTERVIEW_OUTCOME
+  CONFIRMED_ORDINAND
+}
+
+// ─── Models ─────────────────────────────────────────────────────────────────
+
+/// PRD §6.10 — Authenticated staff user.
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  role      UserRole @default(ADMISSIONS_STAFF)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Auth.js adapter fields
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+
+  // Reverse relations
+  auditLogs             AuditLog[]
+  interviewsCreated     Interview[]  @relation("InterviewCreatedBy")
+  interviewsUpdated     Interview[]  @relation("InterviewUpdatedBy")
+  invitationsSent       Interview[]  @relation("InvitationSentBy")
+}
+
+/// Auth.js Account model (required by @auth/prisma-adapter).
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+/// Auth.js Session model (required by @auth/prisma-adapter).
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+/// Auth.js VerificationToken model (required by @auth/prisma-adapter).
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+/// PRD §6.1 — Applicant progressing through the admissions lifecycle.
+model Applicant {
+  id                        String          @id @default(cuid())
+  applicantId               String          @unique @default(cuid())
+  legalName                 String
+  preferredName             String?
+  dateOfBirth               DateTime?
+  email                     String?
+  phone                     String?
+  addressLineOne            String?
+  addressLineTwo            String?
+  city                      String?
+  postcode                  String?
+  country                   String?
+  status                    ApplicantStatus @default(ENQUIRY)
+  hasStageOneBAPException   Boolean         @default(false)
+  stageOneBAPExceptionReason String?
+  createdAt                 DateTime        @default(now())
+  updatedAt                 DateTime        @updatedAt
+
+  // Relationships
+  admissionsYearId String?
+  admissionsYear   AdmissionsYear? @relation(fields: [admissionsYearId], references: [id])
+
+  programmeId String?
+  programme   AcademicProgramme? @relation(fields: [programmeId], references: [id])
+
+  dioceseId String?
+  diocese    Diocese? @relation(fields: [dioceseId], references: [id])
+
+  // One-to-one
+  ecclesialProfile     EcclesialProfile?
+  bapStatus            BAPStatus?
+  offer                Offer?
+  registration         Registration?
+  accommodationRequest AccommodationRequest?
+
+  // One-to-many
+  documents  ApplicantDocument[]
+  interviews Interview[]
+  auditLogs  AuditLog[]
+}
+
+/// PRD §6.2 — Church-related applicant information.
+model EcclesialProfile {
+  id                        String  @id @default(cuid())
+  applicantId               String  @unique
+  directorOfOrdinandsName   String?
+  directorOfOrdinandsEmail  String?
+  directorOfOrdinandsPhone  String?
+  sponsoringBishopName      String?
+  sponsoringBishopEmail     String?
+  sponsoringBishopPhone     String?
+
+  applicant Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+
+  dioceseId String?
+  diocese   Diocese? @relation(fields: [dioceseId], references: [id])
+}
+
+/// PRD §6.4 — Stage 1 and Stage 2 BAP information.
+model BAPStatus {
+  id                        String        @id @default(cuid())
+  applicantId               String        @unique
+  stageOneStatus            BAPStageStatus @default(INCOMPLETE)
+  stageOneDate              DateTime?
+  hasStageOneBAPException   Boolean       @default(false)
+  stageOneBAPExceptionReason String?
+  stageTwoStatus            BAPStageStatus @default(INCOMPLETE)
+  stageTwoDate              DateTime?
+
+  applicant Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+}
+
+/// PRD §6.3 — Programme an applicant is applying for.
+model AcademicProgramme {
+  id               String           @id @default(cuid())
+  awardingFramework AwardingFramework
+  courseTitle       String
+  durationOfStudy  String?
+  modeOfStudy      ModeOfStudy      @default(FULL_TIME)
+  isActive         Boolean          @default(true)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  applicants Applicant[]
+}
+
+/// PRD §6.5 — Visit and interview records.
+model Interview {
+  id                            String           @id @default(cuid())
+  applicantId                   String
+  interviewType                 InterviewType
+  invitationSentAt              DateTime?
+  invitationSentByUserId        String?
+  interviewApplicationReceivedAt DateTime?
+  scheduledAt                   DateTime?
+  completedAt                   DateTime?
+  status                        InterviewStatus  @default(REQUIRED)
+  outcome                       InterviewOutcome?
+  notes                         String?
+  createdByUserId               String?
+  updatedByUserId               String?
+  createdAt                     DateTime         @default(now())
+  updatedAt                     DateTime         @updatedAt
+
+  applicant       Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  invitationSentBy User?    @relation("InvitationSentBy", fields: [invitationSentByUserId], references: [id])
+  createdBy       User?     @relation("InterviewCreatedBy", fields: [createdByUserId], references: [id])
+  updatedBy       User?     @relation("InterviewUpdatedBy", fields: [updatedByUserId], references: [id])
+}
+
+/// PRD §6.6 — Admissions decision and offer details.
+model Offer {
+  id            String    @id @default(cuid())
+  applicantId   String    @unique
+  offerType     OfferType
+  decisionDate  DateTime?
+  conditions    String?
+  acceptedAt    DateTime?
+  declinedAt    DateTime?
+  withdrawnAt   DateTime?
+  decisionNotes String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  applicant Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+}
+
+/// PRD §6.7 — Registration form and final confirmation details.
+model Registration {
+  id                            String    @id @default(cuid())
+  applicantId                   String    @unique
+  receivedAt                    DateTime?
+  registrationFormReceivedAt    DateTime?
+  contactDetailsConfirmed       Boolean   @default(false)
+  programmeConfirmed            Boolean   @default(false)
+  bishopDetailsConfirmed        Boolean   @default(false)
+  areSupportingDocumentsSubmitted Boolean  @default(false)
+  electronicSignature           Boolean   @default(false)
+  confirmedOrdinandAt           DateTime?
+  createdAt                     DateTime  @default(now())
+  updatedAt                     DateTime  @updatedAt
+
+  applicant Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+}
+
+/// PRD §6.8 — Tracks required and optional documents for an applicant.
+model ApplicantDocument {
+  id              String        @id @default(cuid())
+  applicantId     String
+  documentTypeId  String?
+  documentType    DocumentType? @relation(fields: [documentTypeId], references: [id])
+  isRequired      Boolean       @default(true)
+  isReceived      Boolean       @default(false)
+  isWaived        Boolean       @default(false)
+  receivedAt      DateTime?
+  storageProvider String?
+  storageUrl      String?
+  fileName        String?
+  notes           String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  applicant Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+}
+
+/// PRD §6.9 — Accommodation requirements for planning.
+model AccommodationRequest {
+  id                       String              @id @default(cuid())
+  applicantId              String              @unique
+  isAccommodationRequired  Boolean             @default(false)
+  accommodationType        AccommodationType?
+  duration                 AccommodationDuration?
+  familyUnitSize           Int?
+  totalAccommodationDemand Int?
+  notes                    String?
+  createdAt                DateTime            @default(now())
+  updatedAt                DateTime            @updatedAt
+
+  applicant Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+}
+
+/// PRD §6.11 — Records important changes to applicant records.
+model AuditLog {
+  id              String      @id @default(cuid())
+  entityType      String
+  entityId        String
+  action          AuditAction
+  previousValue   String?
+  newValue        String?
+  performedByUserId String?
+  performedAt     DateTime    @default(now())
+
+  performedBy Applicant? @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  user        User?      @relation(fields: [performedByUserId], references: [id])
+}
+
+/// Reference data — Diocese.
+model Diocese {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  applicants        Applicant[]
+  ecclesialProfiles EcclesialProfile[]
+}
+
+/// Reference data — Document type configuration.
+model DocumentType {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  documents ApplicantDocument[]
+}
+
+/// Reference data — Admissions year configuration.
+model AdmissionsYear {
+  id        String   @id @default(cuid())
+  label     String   @unique
+  startDate DateTime
+  endDate   DateTime
+  isCurrent Boolean  @default(false)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  applicants Applicant[]
+}
