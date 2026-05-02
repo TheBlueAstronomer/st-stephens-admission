@@ -18,6 +18,7 @@ import { VALID_TRANSITIONS } from '@/lib/business-rules/status-transitions';
 import { updateApplicantStatus } from '@/app/(staff)/applicants/actions';
 import type { ApplicantStatus } from '@/generated/prisma/client';
 import type { ApplicantFull, AvailableInterviewer } from '@/components/applicant-detail/shared';
+import type { DocumentChecklistItem } from '@/lib/queries/documents';
 import { useActionExecutor } from '@/hooks/use-action-executor';
 import { getApplicantProgressStages } from '@/lib/view-models/applicant-progress';
 import {
@@ -36,9 +37,11 @@ interface ApplicantDetailViewProps {
   applicant: ApplicantFull;
   canEdit: boolean;
   availableInterviewers?: AvailableInterviewer[];
+  allDocumentTypes?: { id: string; name: string }[];
+  documentChecklist?: DocumentChecklistItem[];
 }
 
-export function ApplicantDetailView({ applicant, canEdit, availableInterviewers = [] }: ApplicantDetailViewProps) {
+export function ApplicantDetailView({ applicant, canEdit, availableInterviewers = [], allDocumentTypes = [], documentChecklist = [] }: ApplicantDetailViewProps) {
   const [activeTab, setActiveTab] = useState<string>('personal');
   const { isPending, executeAction } = useActionExecutor();
   const [statusError, setStatusError] = useState<string | null>(null);
@@ -247,7 +250,7 @@ export function ApplicantDetailView({ applicant, canEdit, availableInterviewers 
               <TabsContent value="interview"><InterviewTab applicant={applicant} canEdit={canEdit} availableInterviewers={availableInterviewers} /></TabsContent>
               <TabsContent value="offer"><OfferTab applicant={applicant} canEdit={canEdit} /></TabsContent>
               <TabsContent value="registration"><RegistrationTab applicant={applicant} canEdit={canEdit} /></TabsContent>
-              <TabsContent value="documents"><DocumentsTab applicant={applicant} /></TabsContent>
+              <TabsContent value="documents"><DocumentsTab applicant={applicant} canEdit={canEdit} allDocumentTypes={allDocumentTypes} documentChecklist={documentChecklist} /></TabsContent>
               <TabsContent value="notes"><NotesTab /></TabsContent>
               <TabsContent value="timeline"><TimelineTab applicant={applicant} /></TabsContent>
             </div>

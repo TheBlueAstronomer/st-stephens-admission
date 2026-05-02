@@ -198,6 +198,7 @@ model Applicant {
   stageOneBAPExceptionReason String?
   registrationFormReceivedAt DateTime?
   confirmedOrdinandAt        DateTime?
+  sharePointFolderUrl        String?
   createdAt                 DateTime        @default(now())
   updatedAt                 DateTime        @updatedAt
 
@@ -358,10 +359,13 @@ model ApplicantDocument {
   storageUrl      String?
   fileName        String?
   notes           String?
+  waiverNote      String?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
   applicant Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+
+  @@unique([applicantId, documentTypeId])
 }
 
 /// PRD §6.9 — Accommodation requirements for planning.
@@ -410,11 +414,14 @@ model Diocese {
 
 /// Reference data — Document type configuration.
 model DocumentType {
-  id        String   @id @default(cuid())
-  name      String   @unique
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  isSensitive Boolean  @default(false)
+  isRequired  Boolean  @default(true)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   documents ApplicantDocument[]
 }

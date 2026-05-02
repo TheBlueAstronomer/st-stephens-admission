@@ -8,23 +8,45 @@ import {
   CheckCircleIcon,
   CheckSquareIcon,
   ClockCounterClockwiseIcon,
+  ArrowSquareOutIcon,
+  CheckIcon as PhosphorCheckIcon,
+  CopySimpleIcon,
+  DotsThreeIcon,
   FileTextIcon,
+  FolderOpenIcon,
   GraduationCapIcon,
   ListDashesIcon,
+  LockSimpleIcon,
+  MinusIcon,
   PaperPlaneTiltIcon,
   PencilSimpleIcon,
+  PlusIcon,
+  ProhibitIcon,
   ShieldCheckIcon,
   TextAlignLeftIcon,
+  UploadSimpleIcon,
   UserCircleIcon,
   WarningCircleIcon,
+  WarningIcon,
 } from '@phosphor-icons/react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Alert } from '@/components/ui/alert';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { ScheduleInterviewDialog } from '@/components/schedule-interview-dialog';
 import { RecordOfferSheet } from '@/components/record-offer-sheet';
+import { UploadDocumentDialog, type DocTypeOption } from '@/components/upload-document-dialog';
+import { WaiveDocumentSheet } from '@/components/waive-document-sheet';
 import { markApplicationReceived, markInvitationSent } from '@/app/(staff)/interviews/actions';
 import { acceptOffer, markRegistrationReceived, confirmOrdinand } from '@/app/(staff)/applicants/[id]/actions';
+import { clearDocumentStatus } from '@/app/(staff)/applicants/[id]/document-actions';
 import {
   DetailField,
   EmptyState,
@@ -32,11 +54,11 @@ import {
   type ApplicantInterview,
   type AvailableInterviewer,
 } from '@/components/applicant-detail/shared';
+import type { DocumentChecklistItem } from '@/lib/queries/documents';
 import { formatAuditAction } from '@/components/applicant-detail/timeline';
 import { formatAuditValue } from '@/lib/audit-log';
 import { formatDate, formatDateTime, formatTime } from '@/lib/formatters/date';
 import { useActionExecutor } from '@/hooks/use-action-executor';
-import { STATUS_LABELS } from '@/lib/constants/applicant-status';
 
 function renderPanelMembers(interview: ApplicantInterview) {
   if (interview.panelMembers.length === 0) {
@@ -634,28 +656,333 @@ export function RegistrationTab({ applicant, canEdit }: { applicant: ApplicantFu
   );
 }
 
-export function DocumentsTab({ applicant }: { applicant: ApplicantFull }) {
-  if (applicant.documents.length === 0) {
-    return <EmptyState message="No documents tracked yet." />;
+
+function DocumentStatusBadge({ status }: { status: 'RECEIVED' | 'WAIVED' | 'OUTSTANDING' }) {
+  if (status === 'RECEIVED') {
+    return (
+      <Badge
+        className="border-0 text-xs font-medium"
+        style={{ background: '#D1FAE5', color: '#064E3B' }}
+      >
+        Received
+      </Badge>
+    );
+  }
+  if (status === 'WAIVED') {
+    return (
+      <Badge
+        className="border-0 text-xs font-medium line-through"
+        style={{ background: '#F9FAFB', color: '#374151' }}
+      >
+        Waived
+      </Badge>
+    );
   }
   return (
-    <div className="space-y-2">
-      {applicant.documents.map((doc) => (
-        <div key={doc.id} className="flex items-center justify-between rounded-2xl border border-black/6 bg-canvas p-3.5">
-          <div>
-            <p className="text-sm font-medium">{doc.documentType?.name ?? doc.fileName ?? 'Unknown Document'}</p>
-            {doc.notes && <p className="text-xs text-muted-foreground">{doc.notes}</p>}
+    <Badge
+      className="border-0 text-xs font-medium"
+      style={{ background: '#FEF2F2', color: '#991B1B' }}
+    >
+      Outstanding
+    </Badge>
+  );
+}
+
+interface DocRowActionsProps {
+  applicantId: string;
+  item: DocumentChecklistItem;
+  onUpload: () => void;
+  onWaive: () => void;
+}
+
+function DocRowActions({ applicantId, item, onUpload, onWaive }: DocRowActionsProps) {
+  const { executeAction } = useActionExecutor();
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger render={
+        <Button variant="ghost" size="icon-sm" className="h-6 w-6 rounded-full" />
+      }>
+        <DotsThreeIcon size={14} weight="bold" />
+        <span className="sr-only">Document actions</span>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={onUpload}>
+          <UploadSimpleIcon size={13} className="mr-2" />
+          Mark as Received
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={onUpload}>
+          <ArrowSquareOutIcon size={13} className="mr-2" />
+          Upload File
+        </DropdownMenuItem>
+        {item.status !== 'WAIVED' && (
+          <DropdownMenuItem onClick={onWaive}>
+            <ProhibitIcon size={13} className="mr-2" />
+            Waive
+          </DropdownMenuItem>
+        )}
+        {item.status !== 'OUTSTANDING' && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() =>
+                executeAction({
+                  action: () => clearDocumentStatus({ applicantId, documentTypeId: item.documentTypeId }),
+                  successMessage: 'Document status cleared.',
+                  refresh: true,
+                })
+              }
+              className="text-destructive focus:text-destructive"
+            >
+              Clear Status
+            </DropdownMenuItem>
+          </>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+export function DocumentsTab({
+  applicant,
+  canEdit = false,
+  allDocumentTypes = [],
+  documentChecklist = [],
+}: {
+  applicant: ApplicantFull;
+  canEdit?: boolean;
+  allDocumentTypes?: { id: string; name: string }[];
+  documentChecklist?: DocumentChecklistItem[];
+}) {
+  const [uploadItem, setUploadItem] = useState<DocumentChecklistItem | null>(null);
+  const [waiveItem,  setWaiveItem]  = useState<DocumentChecklistItem | null>(null);
+  const [copied,     setCopied]     = useState(false);
+
+  const hasSharePointFolder = !!applicant.sharePointFolderUrl;
+  const availableDocTypes: DocTypeOption[] = allDocumentTypes;
+
+  const required  = documentChecklist.filter((i) => i.isRequired).length;
+  const satisfied = documentChecklist.filter((i) => i.status === 'RECEIVED' || i.status === 'WAIVED').length;
+  const pct       = required > 0 ? Math.round((satisfied / required) * 100) : 100;
+
+  function handleCopy() {
+    if (!applicant.sharePointFolderUrl) return;
+    void navigator.clipboard.writeText(applicant.sharePointFolderUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  return (
+    <TooltipProvider>
+      <div className="space-y-4">
+        {/* ── SharePoint folder block ──────────────────────── */}
+        <div className="flex items-center justify-between rounded-xl border border-black/6 bg-canvas px-4 py-2.5">
+          <div className="flex items-center gap-2 text-sm">
+            <FolderOpenIcon size={15} weight="duotone" className="text-brand-ink/60 shrink-0" />
+            <span className="font-medium text-brand-ink">SharePoint Folder</span>
           </div>
           <div className="flex items-center gap-2">
-            {doc.isReceived && <Badge className="bg-green-100 text-green-800 border-0">Received</Badge>}
-            {doc.isWaived && <Badge className="bg-gray-100 text-gray-600 border-0">Waived</Badge>}
-            {!doc.isReceived && !doc.isWaived && doc.isRequired && (
-              <Badge className="bg-red-100 text-red-800 border-0">Outstanding</Badge>
+            {hasSharePointFolder ? (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full h-7 px-3 text-xs gap-1.5"
+                  render={
+                    <a
+                      href={applicant.sharePointFolderUrl!}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    />
+                  }
+                >
+                  <ArrowSquareOutIcon size={12} weight="bold" />
+                  Open applicant folder
+                </Button>
+                <Tooltip>
+                  <TooltipTrigger render={
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      className="h-7 w-7 rounded-full"
+                      onClick={handleCopy}
+                    />
+                  }>
+                    {copied
+                      ? <PhosphorCheckIcon size={13} weight="bold" className="text-green-600" />
+                      : <CopySimpleIcon size={13} />
+                    }
+                    <span className="sr-only">Copy link</span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">{copied ? 'Copied!' : 'Copy link'}</TooltipContent>
+                </Tooltip>
+              </>
+            ) : (
+              <span className="text-xs text-muted-foreground">Not linked</span>
             )}
           </div>
         </div>
-      ))}
-    </div>
+
+        {/* ── Completion progress ──────────────────────────── */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-medium text-brand-ink">
+              Completion: {satisfied} / {required} documents complete
+            </span>
+            <span className="tabular-nums text-muted-foreground">{pct}%</span>
+          </div>
+          <div className="h-2 w-full rounded-full bg-black/6 overflow-hidden">
+            <div
+              className="h-full rounded-full bg-brand-ink transition-[width] duration-600 ease-out"
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+        </div>
+
+        {/* ── Document checklist table ─────────────────────── */}
+        <div
+          className="rounded-xl border border-black/6 overflow-hidden"
+          data-testid="document-checklist"
+        >
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-black/6 bg-black/2">
+                <th className="py-2.5 pl-4 pr-3 text-left text-xs font-medium text-muted-foreground w-[40%]">
+                  Document
+                </th>
+                <th className="py-2.5 px-3 text-center text-xs font-medium text-muted-foreground w-[8%]">
+                  Required
+                </th>
+                <th className="py-2.5 px-3 text-left text-xs font-medium text-muted-foreground w-[15%]">
+                  Status
+                </th>
+                <th className="py-2.5 px-3 text-left text-xs font-medium text-muted-foreground w-[17%]">
+                  Received
+                </th>
+                <th className="py-2.5 pl-3 pr-4 text-right text-xs font-medium text-muted-foreground w-[20%]">
+                  File
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {documentChecklist.map((item, idx) => (
+                <tr
+                  key={item.documentTypeId}
+                  className={`border-b border-black/4 last:border-0 transition-colors hover:bg-black/1.5 ${idx % 2 === 1 ? 'bg-black/1' : ''}`}
+                  data-testid="document-row"
+                >
+                  {/* Document name */}
+                  <td className="py-3 pl-4 pr-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      {item.isSensitive
+                        ? <LockSimpleIcon size={13} weight="bold" className="shrink-0 text-amber-500" />
+                        : <FileTextIcon size={13} weight="light" className="shrink-0 text-muted-foreground/60" />
+                      }
+                      <span className="font-medium text-brand-ink truncate">{item.name}</span>
+                      {item.status === 'WAIVED' && item.waiverNote && (
+                        <Tooltip>
+                          <TooltipTrigger render={<span className="text-muted-foreground cursor-default" />}>
+                            <WarningIcon size={12} className="text-amber-500" />
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-60">
+                            {item.waiverNote}
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                    </div>
+                    {item.notes && item.status !== 'WAIVED' && (
+                      <p className="mt-0.5 pl-5 text-xs text-muted-foreground">{item.notes}</p>
+                    )}
+                  </td>
+
+                  {/* Required */}
+                  <td className="py-3 px-3 text-center">
+                    {item.isRequired
+                      ? <PhosphorCheckIcon size={14} weight="bold" className="mx-auto text-brand-ink" />
+                      : <MinusIcon size={14} className="mx-auto text-muted-foreground/40" />
+                    }
+                  </td>
+
+                  {/* Status badge */}
+                  <td className="py-3 px-3">
+                    <DocumentStatusBadge status={item.status} />
+                  </td>
+
+                  {/* Received date */}
+                  <td className="py-3 px-3 font-mono text-xs tabular-nums text-muted-foreground">
+                    {item.status === 'RECEIVED' && item.receivedAt
+                      ? formatDate(item.receivedAt, { day: 'numeric', month: 'short', year: 'numeric' })
+                      : <span className="not-mono">—</span>
+                    }
+                  </td>
+
+                  {/* File / actions */}
+                  <td className="py-3 pl-3 pr-4">
+                    <div className="flex items-center justify-end gap-1">
+                      {item.status === 'RECEIVED' && item.storageUrl && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 px-1.5 text-xs gap-1 text-brand-ink"
+                          render={
+                            <a href={item.storageUrl} target="_blank" rel="noopener noreferrer" />
+                          }
+                        >
+                          <ArrowSquareOutIcon size={12} weight="bold" />
+                          View
+                        </Button>
+                      )}
+                      {canEdit && item.status === 'OUTSTANDING' && (
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          className="h-6 w-6 rounded-full text-brand-ink"
+                          onClick={() => setUploadItem(item)}
+                          aria-label="Add document"
+                        >
+                          <PlusIcon size={13} weight="bold" />
+                        </Button>
+                      )}
+                      {canEdit && (
+                        <DocRowActions
+                          applicantId={applicant.id}
+                          item={item}
+                          onUpload={() => setUploadItem(item)}
+                          onWaive={() => setWaiveItem(item)}
+                        />
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* ── Dialogs / Sheets ─────────────────────────────── */}
+        {uploadItem && (
+          <UploadDocumentDialog
+            open
+            onOpenChange={(open) => { if (!open) setUploadItem(null); }}
+            applicantId={applicant.id}
+            documentTypeId={uploadItem.documentTypeId}
+            documentName={uploadItem.name}
+            hasSharePointFolder={hasSharePointFolder}
+            availableDocTypes={availableDocTypes}
+          />
+        )}
+        {waiveItem && (
+          <WaiveDocumentSheet
+            open
+            onOpenChange={(open) => { if (!open) setWaiveItem(null); }}
+            applicantId={applicant.id}
+            documentTypeId={waiveItem.documentTypeId}
+            documentName={waiveItem.name}
+            isRequired={waiveItem.isRequired}
+          />
+        )}
+      </div>
+    </TooltipProvider>
   );
 }
 

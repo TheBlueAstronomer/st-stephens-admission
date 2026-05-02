@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import {PrismaClient} from '@/generated/prisma/client';
 import {PrismaPg} from '@prisma/adapter-pg';
+import {DOCUMENT_TYPES} from '@/lib/constants/document-types';
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
@@ -98,6 +99,17 @@ async function main() {
     }
   }
   console.log(`  ✓ Programmes: ${programmes.map((p) => p.courseTitle).join(', ')}`);
+
+  // Document Types
+  const documentTypeRecords: Record<string, { id: string }> = {};
+  for (const dt of DOCUMENT_TYPES) {
+    documentTypeRecords[dt.slug] = await prisma.documentType.upsert({
+      where: {slug: dt.slug},
+      update: {name: dt.name, isSensitive: dt.isSensitive, isRequired: dt.isRequired, isActive: true},
+      create: {name: dt.name, slug: dt.slug, isSensitive: dt.isSensitive, isRequired: dt.isRequired, isActive: true},
+    });
+  }
+  console.log(`  ✓ Document types: ${DOCUMENT_TYPES.length} types seeded`);
 
   // ─── Sample Applicants ───────────────────────────────────────────────────
 
@@ -316,6 +328,70 @@ async function main() {
     } else {
       console.log(`  ⊘ Offer for ${thomasApplicant.applicantId} already exists, skipping`);
     }
+  }
+
+  // ─── F05 E2E: Applicant with mixed document states ──────────────────────
+
+  console.log('\n🌱 Seeding F05 document management data...\n');
+
+  const sophieApplicant = await prisma.applicant.findFirst({
+    where: { applicantId: 'SSH-2025-0009' },
+  });
+
+  let sophieId: string;
+  if (!sophieApplicant) {
+    const sophie = await prisma.applicant.create({
+      data: {
+        applicantId: 'SSH-2025-0009',
+        legalName:   'Sophie Turner',
+        preferredName: 'Sophie',
+        email:       'sophie.t@example.com',
+        status:      'CONDITIONAL_OFFER',
+        admissionsYearId: year2025.id,
+        programmeId:     programmeRecords['BA in Theology'].id,
+        dioceseId:       dioceses['London'].id,
+        sharePointFolderUrl: 'https://sharepoint.example.com/sites/admissions/SSH-2025-0009',
+      },
+    });
+    sophieId = sophie.id;
+    await prisma.bAPStatus.create({
+      data: { applicantId: sophieId, stageOneStatus: 'COMPLETED', stageOneDate: new Date('2025-02-01') },
+    });
+    console.log('  ✓ SSH-2025-0009 — Sophie Turner (CONDITIONAL_OFFER)');
+  } else {
+    sophieId = sophieApplicant.id;
+    console.log('  ⊘ SSH-2025-0009 already exists, skipping applicant create');
+  }
+
+  // Seed sample documents for Sophie
+  const dtGcse    = documentTypeRecords['GCSE_TRANSCRIPT'];
+  const dtAlevel  = documentTypeRecords['A_LEVEL_TRANSCRIPT'];
+  const dtUndergrad = documentTypeRecords['UNDERGRAD_TRANSCRIPT'];
+  const dtLegalId = documentTypeRecords['LEGAL_ID'];
+  const dtDbs     = documentTypeRecords['DBS_CHECK'];
+
+  if (dtGcse && dtAlevel && dtUndergrad && dtLegalId && dtDbs) {
+    // GCSE: RECEIVED
+    await prisma.applicantDocument.upsert({
+      where:  { applicantId_documentTypeId: { applicantId: sophieId, documentTypeId: dtGcse.id } },
+      update: {},
+      create: { applicantId: sophieId, documentTypeId: dtGcse.id, isRequired: true, isReceived: true, receivedAt: new Date('2025-06-12'), fileName: 'gcse_transcript.pdf', storageProvider: 'SHAREPOINT', storageUrl: 'https://sharepoint.example.com/sites/admissions/SSH-2025-0009/gcse_transcript.pdf' },
+    });
+    // A-Level: RECEIVED
+    await prisma.applicantDocument.upsert({
+      where:  { applicantId_documentTypeId: { applicantId: sophieId, documentTypeId: dtAlevel.id } },
+      update: {},
+      create: { applicantId: sophieId, documentTypeId: dtAlevel.id, isRequired: true, isReceived: true, receivedAt: new Date('2025-06-12'), fileName: 'alevel_transcript.pdf', storageProvider: 'SHAREPOINT', storageUrl: 'https://sharepoint.example.com/sites/admissions/SSH-2025-0009/alevel_transcript.pdf' },
+    });
+    // Undergrad: WAIVED
+    await prisma.applicantDocument.upsert({
+      where:  { applicantId_documentTypeId: { applicantId: sophieId, documentTypeId: dtUndergrad.id } },
+      update: {},
+      create: { applicantId: sophieId, documentTypeId: dtUndergrad.id, isRequired: true, isReceived: false, isWaived: true, waiverNote: 'Applicant entered directly via A-levels; no undergraduate degree required for this programme.' },
+    });
+    // Legal ID: OUTSTANDING (sensitive — no record)
+    // DBS Check: OUTSTANDING (sensitive — no record)
+    console.log('  ✓ Sample documents for Sophie Turner: GCSE/A-Level received, Undergrad waived, others outstanding');
   }
 
   console.log('\n✅ Seed complete. Dev login available at /dev/login\n');

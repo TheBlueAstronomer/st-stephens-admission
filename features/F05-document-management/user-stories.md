@@ -11,30 +11,32 @@
 **So that** I can immediately see what documents are missing
 
 ### TDD Focus
-- **Test**: Seed an applicant with no documents; render the checklist; assert all PRD document types are listed with status `OUTSTANDING` for required types.
-- **Test**: Seed an applicant with one document marked `RECEIVED`; assert the checklist shows `RECEIVED` for that type and `OUTSTANDING` for others.
+- **Test**: Seed an applicant with no `ApplicantDocument` records; call `getDocumentChecklist`; assert all 14 document types are returned, all with status `OUTSTANDING`.
+- **Test**: Seed an applicant with one document marked `RECEIVED`; assert the checklist shows `RECEIVED` for that type and `OUTSTANDING` for all others.
+- **Test**: The checklist is never empty — even for a brand-new applicant with zero document records, all 14 rows appear.
 
 ### Acceptance Criteria
-- [ ] All document types from PRD §6.8 are displayed in the checklist.
-- [ ] Each document shows required status, received status, waived status, received date, linked file, and notes.
-- [ ] Status is clearly displayed as `RECEIVED`, `OUTSTANDING`, or `WAIVED`.
+- [x] All 14 document types are always displayed as rows in the checklist, regardless of whether any `ApplicantDocument` records exist.
+- [x] Each row shows: document name, sensitive lock icon (if applicable), required indicator, status badge, received date, file link, and row actions menu.
+- [x] Status is clearly displayed as `RECEIVED`, `OUTSTANDING`, or `WAIVED`.
+- [x] The completion progress bar counts satisfied (RECEIVED + WAIVED) against total required types.
 
 ### Implementation Steps
 1. **Create the Documents tab** — inside the Applicant Detail page (`src/app/(staff)/applicants/[id]/page.tsx`), add a "Documents" tab panel.
-2. **Fetch the checklist data** — query all `DocumentType` records (from admin config) and left-join with the applicant's `ApplicantDocument` records. Compute status for each: `RECEIVED` if `isReceived`, `WAIVED` if `isWaived`, else `OUTSTANDING`.
-3. **Build the checklist table** — shadcn `Table` with columns: Document Name, Required (Phosphor `CheckCircle` / `Circle`), Status (`Badge` colour-coded: green for Received, amber for Outstanding, grey for Waived), Received Date, File Link (Phosphor `FileArrowDown`), Notes, Actions (`DropdownMenu`).
-4. **Add row-level colour coding** — `OUTSTANDING` rows get `bg-amber-50` left border stripe. `RECEIVED` rows get `bg-green-50/5`. `WAIVED` rows get muted text.
-5. **Add a completion summary** — above the table, show a circular `Progress` ring with "X / Y documents received" and a percentage.
-6. **Write tests** — seed applicant with no docs (assert all `OUTSTANDING`), seed with one received (assert correct status), seed with one waived (assert `WAIVED`).
+2. **Fetch the checklist via `getDocumentChecklist`** — server-side query that fetches all active `DocumentType` records and left-joins with `ApplicantDocument` records for this applicant. Returns `DocumentChecklistItem[]` with status computed as `RECEIVED` / `WAIVED` / `OUTSTANDING`. Sensitive rows are filtered out for non-privileged roles.
+3. **Pass checklist to `DocumentsTab`** — page RSC calls `getDocumentChecklist(applicant.id, role)` in parallel with other data fetches and passes the result as a `documentChecklist` prop through `ApplicantDetailView`.
+4. **Render from `documentChecklist` not `applicant.documents`** — the table always maps over all checklist rows, never `applicant.documents` (which may be empty).
+5. **Add a completion summary** — above the table, show a progress bar with "Completion: X / Y documents complete" and a percentage. Counts `RECEIVED + WAIVED` against required-type rows.
+6. **Write tests** — call `getDocumentChecklist` with no docs (assert all 14 rows returned, all `OUTSTANDING`), with one received (assert correct status), with one waived (assert `WAIVED`).
 
 ### Playwright E2E Tests
 Create `e2e/f05-document-checklist.spec.ts`:
-1. **Checklist renders on applicant detail** — sign in as Alice (ADMISSIONS_STAFF); navigate to a seeded applicant’s detail page; click the "Documents" tab; assert the document checklist table is visible with columns: Document Name, Required, Status, Received Date, File Link.
-2. **Status badges display** — assert at least one document shows a status badge (`OUTSTANDING`, `RECEIVED`, or `WAIVED`). Verify colour coding (green for received, amber for outstanding, grey for waived).
-3. **Completion summary** — assert a completion summary (e.g., "X / Y documents received") is displayed above the table.
-4. **Row actions menu** — click the actions menu on an `OUTSTANDING` document row; assert options include "Upload & Mark Received" and "Waive Requirement".
+1. **Checklist always renders all rows** — sign in as Alice (ADMISSIONS_STAFF); navigate to Sophie Turner’s detail page; click the "Documents" tab; assert all 14 document rows are visible.
+2. **Status badges display** — assert at least one document shows a status badge (`OUTSTANDING`, `RECEIVED`, or `WAIVED`). Verify colour coding (green for received, red for outstanding, muted for waived).
+3. **Completion summary** — assert a completion summary (e.g., "Completion: X / Y documents complete") is displayed above the table.
+4. **Row actions menu** — click the three-dot actions menu on an `OUTSTANDING` document row; assert options include "Mark as Received", "Upload File", and "Waive".
 
-> 📎 Refer to `wireframes.md` §"Screen 1 — Document Checklist Tab" for table layout, status badges, and completion ring.
+> 📎 Refer to `wireframes.md` §"Screen 1 — Document Checklist Tab" for table layout, status badges, and completion progress bar.
 
 ---
 
@@ -49,19 +51,18 @@ Create `e2e/f05-document-checklist.spec.ts`:
 - **Test**: Assert an `AuditLog` entry is created for the status change.
 
 ### Acceptance Criteria
-- [ ] Staff can mark a document as received.
-- [ ] Received date is recorded.
-- [ ] A file link is stored in the record.
-- [ ] The checklist updates immediately.
-- [ ] An `AuditLog` entry records the change.
+- [x] Staff can mark a document as received.
+- [x] Received date is recorded.
+- [x] A file link is stored in the record.
+- [x] The checklist updates immediately.
+- [x] An `AuditLog` entry records the change.
 
 ### Implementation Steps
 1. **Create the `markDocumentReceived` server action** — `requireRole('ADMISSIONS_STAFF')`. Accept `applicantId`, `documentTypeId`, `fileUrl`, `fileName`. Set `isReceived = true`, `receivedAt = new Date()`, store the file URL.
 2. **Create `AuditLog` entry** — record `action: 'DOCUMENT_RECEIVED'` with document type name.
-3. **Build the Upload Document dialog** — triggered from the row actions `DropdownMenu` → "Upload & Mark Received". Use shadcn `Dialog` with: drag-and-drop zone (`onDragOver`/`onDrop`), accepted file types (`pdf,doc,docx,jpg,png`), file preview thumbnail, upload `Progress` bar, "Upload & Mark Received" button.
+3. **Build the Upload Document dialog** — triggered from the row actions `DropdownMenu` → "Mark as Received" or "Upload File". The dialog opens pre-labelled with the document name from the checklist row (no type selector shown when opened from a row). Includes: drag-and-drop zone, accepted file types (`pdf,doc,docx,jpg,png`), file size display, Browse files `<label>` (not `<button>`) to preserve trusted click context, upload `Progress` bar, received date field, optional notes.
 4. **Integrate with SharePoint upload** (US-04) — the dialog calls the Graph upload action first, then uses the returned URL to mark received.
-5. **Optimistic UI update** — immediately update the checklist row to `RECEIVED` before server confirmation.
-6. **Write tests** — call action (assert `isReceived`, `receivedAt`, file URL stored), assert audit log created.
+5. **Write tests** — call action (assert `isReceived`, `receivedAt`, file URL stored), assert audit log created.
 
 > 📎 Refer to `wireframes.md` §"Screen 2 — Upload Document" for dialog anatomy.
 
@@ -79,10 +80,10 @@ Create `e2e/f05-document-checklist.spec.ts`:
 - **Test**: Assert an `AuditLog` entry is created.
 
 ### Acceptance Criteria
-- [ ] Staff can waive a document with a note.
-- [ ] Waiving without a note is blocked with a validation error.
-- [ ] The document is displayed as `WAIVED` in the checklist.
-- [ ] An `AuditLog` entry records the waiver with the note.
+- [x] Staff can waive a document with a note.
+- [x] Waiving without a note is blocked with a validation error.
+- [x] The document is displayed as `WAIVED` in the checklist.
+- [x] An `AuditLog` entry records the waiver with the note.
 
 ### Implementation Steps
 1. **Create the `waiveDocument` server action** — `requireRole('ADMISSIONS_STAFF')`. Accept `applicantId`, `documentTypeId`, `waiverNote` (required, non-empty string). Set `isWaived = true`, store the note.
@@ -106,9 +107,9 @@ Create `e2e/f05-document-checklist.spec.ts`:
 - **Test**: Assert the file is not stored locally or in the app database.
 
 ### Acceptance Criteria
-- [ ] Uploaded files are sent to SharePoint/OneDrive via Microsoft Graph.
-- [ ] Only the secure URL and metadata (filename, storage provider) are stored in the database.
-- [ ] The uploaded file is linked to the correct applicant document record.
+- [x] Uploaded files are sent to SharePoint/OneDrive via Microsoft Graph.
+- [x] Only the secure URL and metadata (filename, storage provider) are stored in the database.
+- [x] The uploaded file is linked to the correct applicant document record.
 
 ### Implementation Steps
 1. **Create a Microsoft Graph service** — `src/lib/services/microsoft-graph.ts`. Initialize the Graph client with app-level credentials (client credentials flow).
@@ -130,8 +131,8 @@ Create `e2e/f05-document-checklist.spec.ts`:
 - **Test**: Create a new applicant with folder auto-creation (mock Graph); assert the folder URL is stored.
 
 ### Acceptance Criteria
-- [ ] The applicant record displays a direct link to their document folder.
-- [ ] The link opens the folder in SharePoint/OneDrive.
+- [x] The applicant record displays a direct link to their document folder.
+- [x] The link opens the folder in SharePoint/OneDrive.
 
 ### Implementation Steps
 1. **Store folder URL on applicant record** — add a `sharePointFolderUrl` field on the `Applicant` model (if not already in schema). When creating an applicant, call Graph API to create the folder and store the URL.
@@ -153,11 +154,11 @@ Create `e2e/f05-document-checklist.spec.ts`:
 - **Test**: Request a GCSE transcript (non-sensitive) as `ACADEMIC_STAFF`; assert 200 (if they have applicant access).
 
 ### Acceptance Criteria
-- [ ] Sensitive document types are only accessible to `ADMISSIONS_STAFF` and `SYSTEM_ADMINISTRATOR`.
-- [ ] Non-sensitive documents follow standard role-based access.
+- [x] Sensitive document types are only accessible to `ADMISSIONS_STAFF` and `SYSTEM_ADMINISTRATOR`.
+- [x] Non-sensitive documents follow standard role-based access.
 
 ### Implementation Steps
-1. **Define sensitive document types** — in `src/lib/constants/document-types.ts`, maintain a list of sensitive type slugs: `LEGAL_ID`, `DBS_CHECK`, `REFERENCES`, `INTERVIEW_NOTES`.
+1. **Define sensitive document types** — in `src/lib/constants/document-types.ts`, maintain a list of sensitive type slugs: `LEGAL_ID`, `DBS_CHECK`, `MEDICAL_DECLARATION` only. Academic references, pastoral reference, and interview notes are not sensitive.
 2. **Create `isSensitiveDocument()` utility** — accepts a document type slug, returns `boolean`.
 3. **Guard in data layer** — in the document checklist query, filter out sensitive documents for `ACADEMIC_STAFF` and `SENIOR_LEADERSHIP`. Only `ADMISSIONS_STAFF` and `SYSTEM_ADMINISTRATOR` see them.
 4. **Guard in server actions** — in `markDocumentReceived`, `waiveDocument`, and `uploadDocument`, reject calls for sensitive document types from unauthorised roles.
@@ -166,9 +167,9 @@ Create `e2e/f05-document-checklist.spec.ts`:
 
 ### Playwright E2E Tests
 Add to `e2e/f05-document-checklist.spec.ts`:
-1. **ADMISSIONS_STAFF sees sensitive docs** — sign in as Alice; navigate to the Documents tab of a seeded applicant; assert sensitive document types (e.g., "Legal ID", "DBS Check") are visible in the checklist.
-2. **ACADEMIC_STAFF cannot see sensitive docs** — sign in as Bob (ACADEMIC_STAFF); navigate to the same applicant’s Documents tab (if accessible); assert sensitive document types are NOT displayed in the checklist.
-3. **Non-sensitive docs visible to ACADEMIC_STAFF** — assert non-sensitive document types (e.g., transcripts) are still visible to Bob.
+1. **ADMISSIONS_STAFF sees all rows including sensitive** — sign in as Alice; navigate to Sophie Turner’s Documents tab; assert "Legal ID", "DBS Check", and "Medical Declaration" rows are visible with a lock icon; assert all 14 rows are present.
+2. **ACADEMIC_STAFF cannot see sensitive docs** — sign in as Bob (ACADEMIC_STAFF); navigate to the same applicant’s Documents tab (if accessible); assert "Legal ID", "DBS Check", and "Medical Declaration" rows are NOT visible; assert other rows (e.g., transcripts) are visible.
+3. **Lock icon only on sensitive rows** — as Alice, assert the lock icon is visible on exactly the Legal ID, DBS Check, and Medical Declaration rows, and not on non-sensitive rows (e.g., GCSE Transcript).
 
 ---
 
@@ -183,9 +184,9 @@ Add to `e2e/f05-document-checklist.spec.ts`:
 - **Test**: Waive a document; assert the applicant is no longer in the missing docs result (if all other docs are received).
 
 ### Acceptance Criteria
-- [ ] The query returns applicants with at least one outstanding required document that is not waived.
-- [ ] The query includes which specific documents are missing per applicant.
-- [ ] Waived documents are excluded from the "missing" count.
+- [x] The query returns applicants with at least one outstanding required document that is not waived.
+- [x] The query includes which specific documents are missing per applicant.
+- [x] Waived documents are excluded from the "missing" count.
 
 ### Implementation Steps
 1. **Create a `getMissingDocuments()` query** — `src/lib/queries/documents.ts`. Accepts optional filters (admissions year, programme, status). Returns applicants with at least one mandatory document that is `!isReceived && !isWaived`.
