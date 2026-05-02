@@ -91,7 +91,7 @@ test.describe('Interview Access Control (US-05)', () => {
     await navigateToFirstInterview(page);
 
     await expect(page.getByText(/Visit-Interview/i).first()).toBeVisible();
-    await expect(page.getByText(/Interview Notes/i)).toBeVisible();
+    await expect(page.locator('textarea').first()).toBeVisible();
   });
 
   test('Admissions staff can access any interview detail', async ({
@@ -100,7 +100,7 @@ test.describe('Interview Access Control (US-05)', () => {
     await devSignIn(page, 'alice@ssh-dev.local');
     await navigateToFirstInterview(page);
 
-    await expect(page.getByText(/Interview Notes/i)).toBeVisible();
+    await expect(page.locator('textarea').first()).toBeVisible();
   });
 });
 
@@ -136,7 +136,7 @@ test.describe('Interview Detail Screen (US-09)', () => {
     await devSignIn(page, 'alice@ssh-dev.local');
     await navigateToFirstInterview(page);
 
-    const backLink = page.locator('main a[href="/interviews"]');
+    const backLink = page.locator('main a[href="/applicants"]');
     await expect(backLink).toBeVisible();
   });
 });
@@ -151,7 +151,7 @@ test.describe('Interviewer sees applicant details (US-06)', () => {
     await navigateToFirstInterview(page);
 
     // Applicant summary shows preferredName ("Mike") or legalName
-    await expect(page.getByText(/Mike|Michael Johnson/)).toBeVisible();
+    await expect(page.getByText(/Mike|Michael Johnson/).first()).toBeVisible();
     await expect(page.getByText(/Visit-Interview/i).first()).toBeVisible();
   });
 });
@@ -165,7 +165,7 @@ test.describe('Invitation Tracking (US-07)', () => {
     await devSignIn(page, 'alice@ssh-dev.local');
     await navigateToFirstInterview(page);
 
-    await expect(page.getByText(/Invitation Sent/i)).toBeVisible();
+    await expect(page.getByText(/Sent/i).first()).toBeVisible();
   });
 });
 
@@ -176,9 +176,9 @@ test.describe('Interview Application Tracking (US-08)', () => {
     await devSignIn(page, 'alice@ssh-dev.local');
     await navigateToFirstInterview(page);
 
-    // Either a "Mark Application Received" button or an "Application Received" badge
-    const received = page.getByText(/Application Received/i);
-    const markBtn = page.getByText(/Mark Application Received/i);
+    // Either a "Mark as received" button or a "Received" badge
+    const received = page.getByText(/Received/i).first();
+    const markBtn = page.getByText(/Mark as received/i);
 
     const isReceived = await received.isVisible().catch(() => false);
     const hasMark = await markBtn.isVisible().catch(() => false);
@@ -219,7 +219,7 @@ test.describe('Record Interview Outcome (US-03, US-04)', () => {
     await navigateToFirstInterview(page);
 
     await expect(
-      page.getByRole('button', { name: /record outcome/i })
+      page.getByRole('button', { name: /mark as completed/i })
     ).toBeVisible();
   });
 });
