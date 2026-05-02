@@ -2,25 +2,21 @@
 
 import Link from 'next/link';
 import {
-  CalendarBlankIcon,
+  ArrowRightIcon,
   CheckCircleIcon,
   FileTextIcon,
-  NotePencilIcon,
   PaperPlaneTiltIcon,
-  UserCircleIcon,
 } from '@phosphor-icons/react';
 import { Alert } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { getInterviewTypeLabel, OUTCOME_OPTIONS, type InterviewDetail } from '@/components/interview-detail/shared';
 import type { InterviewOutcome } from '@/generated/prisma/client';
-import { formatDate, formatDateTime } from '@/lib/formatters/date';
+import { formatDate, formatTime } from '@/lib/formatters/date';
 
-export function InterviewHeaderCard({
+/** Left narrow meta column — type badge, status, date/time, panel, invitation, application */
+export function InterviewLeftMeta({
   interview,
   canEdit,
   isPending,
@@ -33,124 +29,231 @@ export function InterviewHeaderCard({
   onMarkInvitationAction: () => void;
   onMarkApplicationAction: () => void;
 }) {
+  const statusDotColor =
+    interview.status === 'COMPLETED'
+      ? 'bg-success'
+      : interview.status === 'SCHEDULED'
+        ? 'bg-brand-solid'
+        : interview.status === 'CANCELLED'
+          ? 'bg-destructive'
+          : 'bg-muted-foreground';
+
   return (
-    <Card className="rounded-2xl border-black/6 shadow-sm shadow-black/3">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Badge className="border-0 bg-brand-solid text-brand-solid-foreground">
-              {getInterviewTypeLabel(interview.interviewType)}
-            </Badge>
-            <Badge
-              variant="outline"
-              className={`${
-                interview.status === 'COMPLETED'
-                  ? 'border-green-300 text-green-800 bg-green-50'
-                  : interview.status === 'SCHEDULED'
-                    ? 'border-blue-300 text-blue-800 bg-blue-50'
-                    : interview.status === 'CANCELLED'
-                      ? 'border-red-300 text-red-800 bg-red-50'
-                      : ''
-              }`}
-            >
-              {interview.status}
-            </Badge>
+    <div className="space-y-8">
+      {/* Type + status */}
+      <div className="space-y-2">
+        <span className="inline-block rounded-md bg-brand-solid px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-brand-solid-foreground">
+          {getInterviewTypeLabel(interview.interviewType)}
+        </span>
+        <div className="flex items-center gap-2">
+          <span className={`h-2 w-2 rounded-full ${statusDotColor}`} />
+          <span className={`text-sm font-semibold ${
+            interview.status === 'SCHEDULED' ? 'text-success' :
+            interview.status === 'COMPLETED' ? 'text-success' :
+            interview.status === 'CANCELLED' ? 'text-destructive' :
+            'text-muted-foreground'
+          }`}>{interview.status}</span>
+        </div>
+      </div>
+
+      {/* Date & Time */}
+      {interview.scheduledAt && (
+        <div className="space-y-0.5">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+            Date &amp; Time
+          </p>
+          <p className="text-sm font-medium text-brand-ink">
+            {formatDate(interview.scheduledAt, {
+              weekday: 'short',
+              day: 'numeric',
+              month: 'short',
+              year: 'numeric',
+            })}
+          </p>
+          <p className="text-sm text-brand-solid font-medium">
+            {formatTime(interview.scheduledAt, { hour: '2-digit', minute: '2-digit' })}
+          </p>
+        </div>
+      )}
+
+      {/* Assigned To */}
+      {interview.panelMembers?.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+            Assigned To
+          </p>
+          <div className="space-y-2">
+            {interview.panelMembers.map((pm) => {
+              const initials = (pm.user.name ?? '')
+                .split(' ')
+                .map((n) => n[0])
+                .join('')
+                .toUpperCase()
+                .slice(0, 2);
+              return (
+                <div key={pm.user.id} className="flex items-center gap-2">
+                  <div className="h-7 w-7 rounded-full bg-brand-solid flex items-center justify-center text-[10px] font-semibold text-brand-solid-foreground shrink-0">
+                    {initials}
+                  </div>
+                  <span className="text-sm text-brand-ink">{pm.user.name}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {interview.scheduledAt && (
-          <div className="flex items-center gap-2 text-sm">
-            <CalendarBlankIcon size={16} weight="light" className="text-muted-foreground" />
-            <span className="font-medium">
-              {formatDateTime(
-                interview.scheduledAt,
-                {
-                  weekday: 'long',
-                  day: 'numeric',
-                  month: 'long',
-                  year: 'numeric',
-                },
-                {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                },
-              )}
+      )}
+
+      <div className="border-t border-border" />
+
+      {/* Invitation */}
+      <div className="space-y-2">
+        <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+          Invitation
+        </p>
+        {interview.invitationSentAt ? (
+          <div className="space-y-0.5">
+            <div className="flex items-center gap-1.5 text-sm text-on-primary-container">
+              <CheckCircleIcon size={14} weight="fill" />
+              <span>
+                Sent{' '}
+                {formatDate(interview.invitationSentAt, { day: 'numeric', month: 'short' })}
+                {' · '}
+                {formatTime(interview.invitationSentAt, { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            </div>
+            {interview.invitationSentBy && (
+              <p className="text-xs text-muted-foreground pl-5">
+                by {interview.invitationSentBy.name}
+              </p>
+            )}
+          </div>
+        ) : canEdit && interview.status === 'SCHEDULED' ? (
+          <button
+            type="button"
+            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-brand-ink transition-colors disabled:opacity-50"
+            disabled={isPending}
+            onClick={onMarkInvitationAction}
+          >
+            <PaperPlaneTiltIcon size={14} weight="light" />
+            Mark as sent
+          </button>
+        ) : (
+          <p className="text-sm text-muted-foreground">—</p>
+        )}
+      </div>
+
+      {/* Application */}
+      <div className="space-y-2">
+        <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+          Application
+        </p>
+        {interview.interviewApplicationReceivedAt ? (
+          <div className="flex items-center gap-1.5 text-sm text-on-primary-container">
+            <CheckCircleIcon size={14} weight="fill" />
+            <span>
+              Received{' '}
+              {formatDate(interview.interviewApplicationReceivedAt, { day: 'numeric', month: 'short' })}
+              {' · '}
+              {formatTime(interview.interviewApplicationReceivedAt, { hour: '2-digit', minute: '2-digit' })}
             </span>
           </div>
+        ) : canEdit && interview.status === 'SCHEDULED' ? (
+          <button
+            type="button"
+            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-brand-ink transition-colors disabled:opacity-50"
+            disabled={isPending}
+            onClick={onMarkApplicationAction}
+          >
+            <FileTextIcon size={14} weight="light" />
+            Mark as received
+          </button>
+        ) : (
+          <p className="text-sm text-muted-foreground">—</p>
         )}
-
-        <div className="flex items-center gap-3 flex-wrap">
-          {interview.invitationSentAt ? (
-            <Badge className="border-0 bg-green-100 text-green-800">
-              <PaperPlaneTiltIcon size={12} weight="fill" className="mr-1" />
-              Invitation Sent{' '}
-              {formatDate(interview.invitationSentAt, {
-                day: 'numeric',
-                month: 'short',
-              })}
-            </Badge>
-          ) : canEdit && interview.status === 'SCHEDULED' ? (
-            <Button
-              variant="outline"
-              size="sm"
-              className="rounded-full text-xs"
-              disabled={isPending}
-              onClick={onMarkInvitationAction}
-            >
-              <PaperPlaneTiltIcon size={12} weight="light" className="mr-1" />
-              Mark Invitation Sent
-            </Button>
-          ) : null}
-
-          {interview.interviewApplicationReceivedAt ? (
-            <Badge className="border-0 bg-green-100 text-green-800">
-              <FileTextIcon size={12} weight="fill" className="mr-1" />
-              Application Received{' '}
-              {formatDate(interview.interviewApplicationReceivedAt, {
-                day: 'numeric',
-                month: 'short',
-              })}
-            </Badge>
-          ) : canEdit && interview.status === 'SCHEDULED' ? (
-            <Button
-              variant="outline"
-              size="sm"
-              className="rounded-full text-xs"
-              disabled={isPending}
-              onClick={onMarkApplicationAction}
-            >
-              <FileTextIcon size={12} weight="light" className="mr-1" />
-              Mark Application Received
-            </Button>
-          ) : null}
-        </div>
-
-        {interview.panelMembers?.length > 0 && (
-          <div className="space-y-2">
-            <h4 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Interview Panel
-            </h4>
-            <div className="flex flex-wrap gap-2">
-              {interview.panelMembers.map((pm) => (
-                <div
-                  key={pm.user.id}
-                  className="flex items-center gap-2 rounded-xl bg-surface-subtle px-3 py-1.5"
-                >
-                  <UserCircleIcon size={16} weight="light" className="text-muted-foreground" />
-                  <span className="text-sm font-medium">{pm.user.name}</span>
-                  <span className="text-xs text-muted-foreground">{pm.user.email}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
-export function InterviewNotesOutcomeSection({
+/** Horizontal applicant summary card — spans full right column width */
+export function ApplicantSummaryCard({
+  interview,
+  isAcademicStaff,
+}: {
+  interview: InterviewDetail;
+  isAcademicStaff: boolean;
+}) {
+  const applicant = interview.applicant;
+
+  return (
+    <div className="rounded-2xl border border-border bg-background shadow-sm p-5">
+      <h2 className="text-base font-semibold text-brand-ink mb-4">Applicant Summary</h2>
+      <div className="grid grid-cols-2 gap-x-8 gap-y-3 sm:grid-cols-3 lg:grid-cols-4">
+        {/* Name */}
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-0.5">
+            Name
+          </p>
+          <Link
+            href={`/applicants/${applicant.id}`}
+            className="text-sm font-semibold text-brand-ink hover:underline"
+          >
+            {applicant.preferredName ?? applicant.legalName}
+          </Link>
+          <p className="text-[11px] text-muted-foreground font-mono">{applicant.applicantId}</p>
+        </div>
+
+        {/* Diocese */}
+        {applicant.diocese && (
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-0.5">
+              Diocese
+            </p>
+            <p className="text-sm font-medium text-brand-ink">{applicant.diocese.name}</p>
+          </div>
+        )}
+
+        {/* Programme */}
+        {applicant.programme && (
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-0.5">
+              Programme
+            </p>
+            <p className="text-sm font-medium text-brand-ink">{applicant.programme.courseTitle}</p>
+          </div>
+        )}
+
+        {/* BAP Status */}
+        {applicant.bapStatus && (
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-0.5">
+              BAP Status
+            </p>
+            <div className="flex items-center gap-1.5 text-sm font-medium text-brand-ink">
+              <CheckCircleIcon size={14} weight="fill" className="text-success shrink-0" />
+              {applicant.bapStatus.stageOneStatus}
+            </div>
+          </div>
+        )}
+
+        {/* DDO — hidden from academic staff */}
+        {!isAcademicStaff && applicant.ecclesialProfile?.directorOfOrdinandsName && (
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-0.5">
+              DDO
+            </p>
+            <p className="text-sm font-medium text-brand-ink">
+              {applicant.ecclesialProfile.directorOfOrdinandsName}
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** Right working area — notes, outcome, follow-up, action buttons */
+export function InterviewWorkingArea({
   interview,
   canEdit,
   canRecordOutcome,
@@ -182,116 +285,109 @@ export function InterviewNotesOutcomeSection({
   const isCompleted = interview.status === 'COMPLETED';
 
   return (
-    <Card className="rounded-2xl border-black/6 shadow-sm shadow-black/3">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
-          <NotePencilIcon size={18} weight="light" />
-          Interview Notes & Outcome
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-1.5">
-          <Label className="text-xs uppercase tracking-wider text-muted-foreground">
-            Notes
-          </Label>
-          <Textarea
-            value={notes}
-            onChange={(e) => onNotesChangeAction(e.target.value)}
-            placeholder="Record interview notes here..."
-            className="min-h-30 rounded-xl"
-            disabled={isCompleted && !canEdit}
-          />
-        </div>
+    <div className="space-y-6">
+      {/* Notes */}
+      <div className="space-y-2">
+        <h3 className="text-base font-semibold text-brand-ink">Notes</h3>
+        <Textarea
+          value={notes}
+          onChange={(e) => onNotesChangeAction(e.target.value)}
+          placeholder="Enter interview notes..."
+          className="min-h-50 rounded-2xl border border-border bg-background focus-visible:ring-1 focus-visible:ring-brand-solid/30 resize-none"
+          disabled={isCompleted && !canEdit}
+        />
+      </div>
 
-        <div className="space-y-1.5">
-          <Label className="text-xs uppercase tracking-wider text-muted-foreground">
-            Follow-up Actions
-          </Label>
-          <Textarea
-            value={followUpActions}
-            onChange={(e) => onFollowUpActionsChangeAction(e.target.value)}
-            placeholder="Any follow-up actions required..."
-            className="min-h-20 rounded-xl"
-            disabled={isCompleted && !canEdit}
-          />
-        </div>
-
-        {!isCompleted && canRecordOutcome && (
-          <Button
-            variant="outline"
-            className="rounded-full"
-            onClick={onSaveNotesAction}
-            disabled={isPending}
-          >
-            Save Notes
-          </Button>
-        )}
-
-        {!isCompleted && canRecordOutcome && (
-          <div className="space-y-3 pt-3 border-t">
-            <Label className="text-xs uppercase tracking-wider text-muted-foreground">
-              Record Outcome *
-            </Label>
-            <div className="grid grid-cols-2 gap-2">
-              {OUTCOME_OPTIONS.map((opt) => (
+      {/* Outcome */}
+      {!isCompleted && canRecordOutcome && (
+        <div className="space-y-3 pt-2">
+          <h3 className="text-base font-semibold text-brand-ink">Outcome</h3>
+          <div className="flex flex-wrap gap-3">
+            {OUTCOME_OPTIONS.map((opt) => {
+              const isSelected = selectedOutcome === opt.value;
+              return (
                 <button
                   key={opt.value}
                   type="button"
                   onClick={() => onSelectOutcomeAction(opt.value)}
-                  className={`rounded-xl border px-4 py-2.5 text-sm font-medium transition-all ${
-                    selectedOutcome === opt.value
-                      ? opt.color + ' ring-2 ring-offset-1 ring-current'
-                      : 'border-black/8 bg-white text-gray-700 hover:border-gray-300'
+                  className={`flex items-center gap-2 rounded-full border px-5 py-2 text-sm font-medium transition-all ${
+                    isSelected
+                      ? 'border-brand-solid bg-brand-solid text-brand-solid-foreground'
+                      : 'border-border bg-background text-muted-foreground hover:border-brand-solid/40'
                   }`}
                 >
-                  {selectedOutcome === opt.value && (
-                    <CheckCircleIcon size={14} weight="fill" className="inline mr-1.5" />
-                  )}
+                  <span className={`h-3.5 w-3.5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                    isSelected ? 'border-white bg-white' : 'border-border'
+                  }`}>
+                    {isSelected && <span className="h-1.5 w-1.5 rounded-full bg-brand-solid" />}
+                  </span>
                   {opt.label}
                 </button>
-              ))}
-            </div>
+              );
+            })}
           </div>
-        )}
+        </div>
+      )}
 
-        {isCompleted && interview.outcome && (
-          <div className="rounded-xl bg-surface-subtle p-4 space-y-2">
-            <p className="text-sm font-medium">
-              Outcome:{' '}
-              <span
-                className={
-                  interview.outcome === 'RECOMMENDED'
-                    ? 'text-green-700'
-                    : interview.outcome === 'NOT_RECOMMENDED'
-                      ? 'text-red-700'
-                      : 'text-amber-700'
-                }
-              >
-                {interview.outcome.replace('_', ' ')}
-              </span>
+      {isCompleted && interview.outcome && (
+        <div className="rounded-2xl border border-border bg-surface-subtle p-4 space-y-1 mt-2">
+          <p className="text-sm font-semibold text-brand-ink">
+            Outcome:{' '}
+            <span
+              className={
+                interview.outcome === 'RECOMMENDED'
+                  ? 'text-on-primary-container'
+                  : interview.outcome === 'NOT_RECOMMENDED'
+                    ? 'text-destructive'
+                    : 'text-accent-gold'
+              }
+            >
+              {interview.outcome.replace(/_/g, ' ')}
+            </span>
+          </p>
+          {interview.completedAt && (
+            <p className="text-xs text-muted-foreground">
+              Completed{' '}
+              {formatDate(interview.completedAt, { day: 'numeric', month: 'long', year: 'numeric' })}
             </p>
-            {interview.completedAt && (
-              <p className="text-xs text-muted-foreground">
-                Completed on {formatDate(interview.completedAt, {
-                  day: 'numeric',
-                  month: 'long',
-                  year: 'numeric',
-                })}
-              </p>
-            )}
-          </div>
-        )}
+          )}
+        </div>
+      )}
 
-        {error && (
-          <Alert variant="destructive" className="rounded-xl text-sm">
-            {error}
-          </Alert>
-        )}
+      {/* Follow-up actions */}
+      <div className="space-y-2 pt-2">
+        <h3 className="text-base font-semibold text-brand-ink">Follow-up actions</h3>
+        <Textarea
+          value={followUpActions}
+          onChange={(e) => onFollowUpActionsChangeAction(e.target.value)}
+          placeholder="Optional follow-up steps..."
+          className="rounded-2xl border border-border bg-background focus-visible:ring-1 focus-visible:ring-brand-solid/30 resize-none"
+          rows={3}
+          disabled={isCompleted && !canEdit}
+        />
+      </div>
 
-        {!isCompleted && canRecordOutcome && (
-          <div className="flex justify-end pt-2">
+      {error && (
+        <Alert variant="destructive" className="rounded-xl text-sm">
+          {error}
+        </Alert>
+      )}
+
+      {/* Action buttons */}
+      {canRecordOutcome && (
+        <div className="flex items-center justify-between pt-4 border-t border-border">
+          <Button
+            variant="outline"
+            className="rounded-full px-6"
+            onClick={onSaveNotesAction}
+            disabled={isPending || isCompleted}
+          >
+            Save Notes
+          </Button>
+
+          {!isCompleted && (
             <Button
-              className="rounded-full bg-brand-solid px-6 text-brand-solid-foreground hover:bg-brand-solid/90"
+              className="rounded-full bg-brand-ink px-6 text-white hover:bg-brand-ink/90"
               disabled={!selectedOutcome || isPending}
               onClick={onRecordOutcomeAction}
             >
@@ -302,94 +398,14 @@ export function InterviewNotesOutcomeSection({
                 </>
               ) : (
                 <>
-                  <CheckCircleIcon size={16} weight="fill" className="mr-2" />
-                  Record Outcome
+                  Mark as Completed
+                  <ArrowRightIcon size={16} weight="bold" className="ml-2" />
                 </>
               )}
             </Button>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-export function ApplicantSummaryCard({
-  interview,
-  isAcademicStaff,
-}: {
-  interview: InterviewDetail;
-  isAcademicStaff: boolean;
-}) {
-  const applicant = interview.applicant;
-
-  return (
-    <Card className="rounded-2xl border-black/6 shadow-sm shadow-black/3">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base">Applicant</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <div>
-          <p className="text-sm font-medium text-brand-ink">
-            {applicant.preferredName ?? applicant.legalName}
-          </p>
-          <p className="text-xs text-muted-foreground font-mono">
-            {applicant.applicantId}
-          </p>
-        </div>
-
-        <div className="space-y-2 text-sm">
-          {applicant.programme && (
-            <div>
-              <span className="text-xs text-muted-foreground">Programme</span>
-              <p className="font-medium">{applicant.programme.courseTitle}</p>
-            </div>
-          )}
-          {applicant.diocese && (
-            <div>
-              <span className="text-xs text-muted-foreground">Diocese</span>
-              <p className="font-medium">{applicant.diocese.name}</p>
-            </div>
-          )}
-          {applicant.bapStatus && (
-            <div>
-              <span className="text-xs text-muted-foreground">BAP Stage 1</span>
-              <p className="font-medium">{applicant.bapStatus.stageOneStatus}</p>
-            </div>
-          )}
-          {!isAcademicStaff && applicant.ecclesialProfile?.directorOfOrdinandsName && (
-            <div>
-              <span className="text-xs text-muted-foreground">Director of Ordinands</span>
-              <p className="font-medium">{applicant.ecclesialProfile.directorOfOrdinandsName}</p>
-            </div>
           )}
         </div>
-
-        <Link
-          href={`/applicants/${applicant.id}`}
-          className="mt-2 inline-block text-xs font-medium text-brand-ink hover:underline"
-        >
-          View Full Record →
-        </Link>
-      </CardContent>
-    </Card>
-  );
-}
-
-export function InterviewMetadataCard({ interview }: { interview: InterviewDetail }) {
-  return (
-    <Card className="rounded-2xl border-black/6 shadow-sm shadow-black/3">
-      <CardContent className="space-y-2 pt-4 text-xs text-muted-foreground">
-        {interview.createdBy && <p>Created by {interview.createdBy.name}</p>}
-        <p>
-          Created {formatDate(interview.createdAt, {
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric',
-          })}
-        </p>
-        {interview.updatedBy && <p>Last updated by {interview.updatedBy.name}</p>}
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 }

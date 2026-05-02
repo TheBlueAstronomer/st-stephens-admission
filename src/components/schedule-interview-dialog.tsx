@@ -105,23 +105,35 @@ export function ScheduleInterviewDialog({
               </DialogDescription>
             </DialogHeader>
 
+            <div className="border-t border-black/6 -mx-6" />
+
             {/* Applicant info */}
-            <div className="flex items-center gap-3 rounded-xl bg-surface-subtle p-3">
-              <div>
-                <p className="text-sm font-medium text-brand-ink">{applicantName}</p>
-                <p className="text-xs text-muted-foreground font-mono">{applicantDisplayId}</p>
+            <div className="flex items-center gap-3 rounded-full bg-surface-subtle px-5 py-3">
+              {/* Avatar */}
+              <div className="h-9 w-9 rounded-full bg-brand-ink flex items-center justify-center shrink-0">
+                <span className="text-xs font-semibold text-white">
+                  {applicantName.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()}
+                </span>
               </div>
-              {bapStageOneStatus && (
-                <Badge
-                  className={`ml-auto border-0 text-xs ${
+              {/* Name + ID + BAP */}
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-semibold text-brand-ink truncate">Applicant: {applicantName}</p>
+                  <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] font-mono text-muted-foreground">
+                    {applicantDisplayId}
+                  </span>
+                </div>
+                {bapStageOneStatus && (
+                  <p className={`text-xs mt-0.5 flex items-center gap-1 ${
                     bapStageOneStatus === 'COMPLETED' || bapStageOneStatus === 'SCHEDULED'
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-amber-100 text-amber-800'
-                  }`}
-                >
-                  BAP: {bapStageOneStatus}
-                </Badge>
-              )}
+                      ? 'text-emerald-600'
+                      : 'text-amber-600'
+                  }`}>
+                    <span className="inline-block h-2 w-2 rounded-full bg-current" />
+                    BAP Status: {bapStageOneStatus}
+                  </p>
+                )}
+              </div>
             </div>
 
             {/* BAP Warning */}
@@ -251,6 +263,7 @@ export function ScheduleInterviewDialog({
             )}
 
             {/* Actions */}
+            <div className="border-t border-black/6 -mx-6" />
             <div className="flex justify-end gap-2 pt-2">
               <DialogClose
                 render={
@@ -264,7 +277,7 @@ export function ScheduleInterviewDialog({
                 Cancel
               </DialogClose>
               <Button
-                className="rounded-full bg-brand-solid px-6 text-brand-solid-foreground hover:bg-brand-solid/90"
+                className="rounded-full bg-brand-ink px-6 text-white hover:bg-brand-ink/90"
                 disabled={!canSubmit || isPending || bapBlocked}
                 onClick={handleSubmit}
               >

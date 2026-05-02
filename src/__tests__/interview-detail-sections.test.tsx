@@ -2,8 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import {
   ApplicantSummaryCard,
-  InterviewHeaderCard,
-  InterviewMetadataCard,
+  InterviewLeftMeta,
 } from '@/components/interview-detail/sections';
 import type { InterviewDetail } from '@/components/interview-detail/shared';
 
@@ -52,9 +51,9 @@ const interview: InterviewDetail = {
 };
 
 describe('interview detail extracted sections', () => {
-  it('renders the interview header card details', () => {
+  it('renders the interview left meta details', () => {
     render(
-      <InterviewHeaderCard
+      <InterviewLeftMeta
         interview={interview}
         canEdit={true}
         isPending={false}
@@ -66,7 +65,7 @@ describe('interview detail extracted sections', () => {
     expect(screen.getByText('Exploratory Visit')).toBeInTheDocument();
     expect(screen.getByText('SCHEDULED')).toBeInTheDocument();
     expect(screen.getByText('Jane Smith')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /mark invitation sent/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /mark as sent/i })).toBeInTheDocument();
   });
 
   it('renders the applicant summary card', () => {
@@ -76,12 +75,5 @@ describe('interview detail extracted sections', () => {
     expect(screen.getByText('APP-2026-001')).toBeInTheDocument();
     expect(screen.getByText('MA Theology')).toBeInTheDocument();
     expect(screen.getByText('Rev. Doe')).toBeInTheDocument();
-  });
-
-  it('renders the interview metadata card', () => {
-    render(<InterviewMetadataCard interview={interview} />);
-
-    expect(screen.getByText('Created by Admin One')).toBeInTheDocument();
-    expect(screen.getByText('Last updated by Admin Two')).toBeInTheDocument();
   });
 });

@@ -3,8 +3,13 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import {
-  ArrowLeftIcon,
-} from '@phosphor-icons/react';
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbList,
+  BreadcrumbSeparator,
+  BreadcrumbLink,
+  BreadcrumbPage,
+} from '@/components/ui/breadcrumb';
 import {
   recordInterviewOutcome,
   saveInterviewNotes,
@@ -14,14 +19,10 @@ import {
 import type { InterviewOutcome } from '@/generated/prisma/client';
 import {
   ApplicantSummaryCard,
-  InterviewHeaderCard,
-  InterviewMetadataCard,
-  InterviewNotesOutcomeSection,
+  InterviewLeftMeta,
+  InterviewWorkingArea,
 } from '@/components/interview-detail/sections';
-import {
-  getInterviewTypeLabel,
-  type InterviewDetail,
-} from '@/components/interview-detail/shared';
+import type { InterviewDetail } from '@/components/interview-detail/shared';
 import { useActionExecutor } from '@/hooks/use-action-executor';
 
 interface InterviewDetailViewProps {
@@ -94,33 +95,46 @@ export function InterviewDetailView({
     });
   };
 
-  return (
-    <div className="max-w-5xl mx-auto space-y-6 p-4">
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Link href="/interviews" className="hover:text-brand-ink transition-colors">
-          <ArrowLeftIcon size={14} weight="light" className="inline mr-1" />
-          Interviews
-        </Link>
-        <span>/</span>
-        <span className="text-brand-ink font-medium">
-          {getInterviewTypeLabel(interview.interviewType)}
-        </span>
-      </div>
+  const applicantName =
+    interview.applicant.preferredName ?? interview.applicant.legalName ?? 'Applicant';
 
-      {/* Two-column layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left column — Interview info */}
-        <div className="lg:col-span-2 space-y-6">
-          <InterviewHeaderCard
+  return (
+    <div className="max-w-6xl mx-auto space-y-6 p-6">
+      {/* Breadcrumb */}
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink render={<Link href="/applicants" />}>Applicants</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink render={<Link href={`/applicants/${interview.applicant.id}`} />}>{applicantName}</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Interview</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
+      {/* Two-column layout: narrow left meta + flex-1 right content */}
+      <div className="flex gap-8 items-start">
+        {/* Left column — Interview meta (~220px) */}
+        <div className="w-52 shrink-0">
+          <InterviewLeftMeta
             interview={interview}
             canEdit={canEdit}
             isPending={isPending}
             onMarkInvitationAction={handleMarkInvitation}
             onMarkApplicationAction={handleMarkApplication}
           />
+        </div>
 
-          <InterviewNotesOutcomeSection
+        {/* Right column — Applicant summary + working area */}
+        <div className="flex-1 min-w-0 space-y-6">
+          <ApplicantSummaryCard interview={interview} isAcademicStaff={isAcademicStaff} />
+
+          <InterviewWorkingArea
             interview={interview}
             canEdit={canEdit}
             canRecordOutcome={canRecordOutcome}
@@ -135,12 +149,6 @@ export function InterviewDetailView({
             onSelectOutcomeAction={setSelectedOutcome}
             onRecordOutcomeAction={handleRecordOutcome}
           />
-        </div>
-
-        {/* Right column — Applicant summary */}
-        <div className="space-y-6">
-          <ApplicantSummaryCard interview={interview} isAcademicStaff={isAcademicStaff} />
-          <InterviewMetadataCard interview={interview} />
         </div>
       </div>
     </div>

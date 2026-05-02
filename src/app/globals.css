@@ -13,6 +13,8 @@
   --color-canvas: var(--canvas);
   --color-surface-subtle: var(--surface-subtle);
   --color-accent-gold: var(--accent-gold);
+  --color-on-primary-container: var(--on-primary-container);
+  --color-success: var(--success);
   --font-sans: var(--font-inter), var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
@@ -58,36 +60,68 @@
   --font-inter: "Inter";
   --font-geist-sans: "Geist";
   --font-geist-mono: "Geist Mono";
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+
+  /* DESIGN.md: surface / background */
+  --background: #f9f9fe;
+  --foreground: #2f323b;
+
+  /* Brand identity (DESIGN.md §Brand: Primary navy #1A2744) */
   --brand-ink: #1A2744;
-  --brand-solid: #1A2744;
-  --brand-solid-foreground: #FFFFFF;
-  --canvas: #FAFAF9;
-  --surface-subtle: #F8F7F5;
+  --brand-solid: #525f7f;
+  --brand-solid-foreground: #f9f8ff;
+
+  /* DESIGN.md: surface tokens */
+  --canvas: #f9f9fe;
+  --surface-subtle: #ecedf6;
+
+  /* DESIGN.md: accent */
   --accent-gold: #C4A882;
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+
+  /* DESIGN.md: semantic positive/confirmed */
+  --on-primary-container: #384564;
+  --success: #4a7c59;
+
+  /* shadcn card / popover — surface-container-lowest */
+  --card: #ffffff;
+  --card-foreground: #2f323b;
+  --popover: #ffffff;
+  --popover-foreground: #2f323b;
+
+  /* DESIGN.md: primary */
+  --primary: #525f7f;
+  --primary-foreground: #f9f8ff;
+
+  /* DESIGN.md: secondary */
+  --secondary: #dbe2f9;
+  --secondary-foreground: #4a5164;
+
+  /* DESIGN.md: surface-container / on-surface-variant */
+  --muted: #ecedf6;
+  --muted-foreground: #5b5f68;
+
+  /* DESIGN.md: secondary-container / on-secondary-container */
+  --accent: #dbe2f9;
+  --accent-foreground: #4a5164;
+
+  /* DESIGN.md: error */
+  --destructive: #a83836;
+
+  /* DESIGN.md: outline-variant / outline */
+  --border: #aeb2bc;
+  --input: #aeb2bc;
+  --ring: #777b84;
+
+  /* Chart scale (neutral greys, unchanged) */
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
+
+  /* DESIGN.md: rounded.sm = 0.5rem */
+  --radius: 0.5rem;
+
+  /* Sidebar — brand navy retained */
   --sidebar: #1A2744;
   --sidebar-foreground: #d9e2ff;
   --sidebar-primary: #ffffff;
@@ -99,43 +133,72 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --brand-ink: #d9e2ff;
-  --brand-solid: #23304d;
-  --brand-solid-foreground: #FFFFFF;
-  --canvas: oklch(0.18 0 0);
-  --surface-subtle: oklch(0.22 0 0);
+  /* DESIGN.md: inverse-surface / inverse-on-surface */
+  --background: #0c0e12;
+  --foreground: #9c9ca2;
+
+  /* Brand identity dark variants */
+  --brand-ink: #c1cef4;
+  --brand-solid: #465372;
+  --brand-solid-foreground: #f9f8ff;
+
+  /* DESIGN.md: surface-dim / surface-container */
+  --canvas: #1a1c22;
+  --surface-subtle: #22252e;
+
+  /* DESIGN.md: accent — warmer in dark */
   --accent-gold: #d9bf98;
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+
+  /* DESIGN.md: semantic positive/confirmed — dark tint */
+  --on-primary-container: #c1cef4;
+  --success: #6aab80;
+
+  /* DESIGN.md: surface-container-lowest dark */
+  --card: #16181f;
+  --card-foreground: #9c9ca2;
+  --popover: #16181f;
+  --popover-foreground: #9c9ca2;
+
+  /* DESIGN.md: inverse-primary / primary-dim */
+  --primary: #c1cef4;
+  --primary-foreground: #25324f;
+
+  /* DESIGN.md: secondary-fixed-dim */
+  --secondary: #383f51;
+  --secondary-foreground: #cdd4eb;
+
+  /* DESIGN.md: surface-container / on-surface-variant dark */
+  --muted: #22252e;
+  --muted-foreground: #777b84;
+
+  /* DESIGN.md: secondary-container dark */
+  --accent: #383f51;
+  --accent-foreground: #cdd4eb;
+
+  /* DESIGN.md: error-dim */
+  --destructive: #fa746f;
+
+  /* DESIGN.md: outline-variant dark */
+  --border: #3a3d47;
+  --input: #3a3d47;
+  --ring: #5b5f68;
+
+  /* Chart scale (neutral greys, unchanged) */
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+
+  /* Sidebar dark */
+  --sidebar: #0c0e12;
+  --sidebar-foreground: #9c9ca2;
+  --sidebar-primary: #c1cef4;
+  --sidebar-primary-foreground: #25324f;
+  --sidebar-accent: rgba(255, 255, 255, 0.06);
+  --sidebar-accent-foreground: #9c9ca2;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-ring: rgba(255, 255, 255, 0.15);
 }
 
 @layer base {

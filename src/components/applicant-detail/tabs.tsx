@@ -5,8 +5,11 @@ import Link from 'next/link';
 import {
   ArrowRightIcon,
   CalendarBlankIcon,
+  ClockCounterClockwiseIcon,
   FileTextIcon,
+  GraduationCapIcon,
   PaperPlaneTiltIcon,
+  ShieldCheckIcon,
   UserCircleIcon,
 } from '@phosphor-icons/react';
 import { Badge } from '@/components/ui/badge';
@@ -46,16 +49,75 @@ function renderPanelMembers(interview: ApplicantInterview) {
 }
 
 export function PersonalTab({ applicant }: { applicant: ApplicantFull }) {
+  const primaryDocs = applicant.documents.filter(
+    (d) => d.isReceived && (d.documentType?.name ?? d.fileName),
+  );
+
   return (
-    <dl className="grid grid-cols-2 gap-x-8 gap-y-4">
-      <DetailField label="Legal Name" value={applicant.legalName} />
-      <DetailField label="Preferred Name" value={applicant.preferredName} />
-      <DetailField label="Date of Birth" value={applicant.dateOfBirth ? formatDate(applicant.dateOfBirth) : null} />
-      <DetailField label="Email" value={applicant.email} />
-      <DetailField label="Phone" value={applicant.phone} />
-      <DetailField label="Address" value={[applicant.addressLineOne, applicant.addressLineTwo, applicant.city, applicant.postcode, applicant.country].filter(Boolean).join(', ') || null} />
-      <DetailField label="Programme" value={applicant.programme?.courseTitle} />
-    </dl>
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-base font-semibold text-brand-ink">Personal Information</h3>
+        <p className="text-sm text-muted-foreground mt-0.5">
+          Legal details and contact information for the primary applicant record.
+        </p>
+      </div>
+
+      <dl className="grid grid-cols-2 gap-x-8 gap-y-4">
+        <DetailField label="Legal Name" value={applicant.legalName} />
+        <DetailField label="Preferred Name" value={applicant.preferredName} />
+        <DetailField label="Date of Birth" value={applicant.dateOfBirth ? formatDate(applicant.dateOfBirth) : null} />
+        <DetailField label="Email" value={applicant.email} />
+        <DetailField label="Phone" value={applicant.phone} />
+        <DetailField label="Address" value={[applicant.addressLineOne, applicant.addressLineTwo, applicant.city, applicant.postcode, applicant.country].filter(Boolean).join(', ') || null} />
+        <DetailField label="Programme" value={applicant.programme?.courseTitle} />
+      </dl>
+
+      {primaryDocs.length > 0 && (
+        <div className="pt-2 border-t border-black/6">
+          <h4 className="text-sm font-semibold text-brand-ink mb-3">Primary Documents</h4>
+          <div className="space-y-2">
+            {primaryDocs.map((doc) => (
+              <div key={doc.id} className="flex items-center gap-3">
+                <FileTextIcon size={16} weight="light" className="text-muted-foreground shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-brand-ink">
+                    {doc.documentType?.name ?? doc.fileName ?? 'Document'}
+                  </p>
+                  {doc.receivedAt && (
+                    <p className="text-xs text-muted-foreground">
+                      Uploaded {formatDate(doc.receivedAt, { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Stat cards */}
+      <div className="grid grid-cols-3 gap-3 pt-2 border-t border-border">
+        <div className="rounded-xl bg-muted/60 p-4 flex flex-col items-center gap-2 text-center">
+          <GraduationCapIcon size={20} weight="light" className="text-muted-foreground" />
+          <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">Programme</span>
+          <span className="text-sm font-semibold text-brand-ink leading-snug">
+            {applicant.programme?.courseTitle ?? '—'}
+          </span>
+        </div>
+        <div className="rounded-xl bg-muted/60 p-4 flex flex-col items-center gap-2 text-center">
+          <ClockCounterClockwiseIcon size={20} weight="light" className="text-muted-foreground" />
+          <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">Last Updated</span>
+          <span className="text-sm font-semibold text-brand-ink">
+            {formatDate(applicant.updatedAt, { day: 'numeric', month: 'short', year: 'numeric' })}
+          </span>
+        </div>
+        <div className="rounded-xl bg-muted/60 p-4 flex flex-col items-center gap-2 text-center">
+          <ShieldCheckIcon size={20} weight="light" className="text-muted-foreground" />
+          <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">DBS Status</span>
+          <span className="text-sm font-semibold text-muted-foreground">Not recorded</span>
+        </div>
+      </div>
+    </div>
   );
 }
 

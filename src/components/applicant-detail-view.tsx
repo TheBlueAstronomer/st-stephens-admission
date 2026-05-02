@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import {
-  CheckCircleIcon,
-  CircleIcon,
+  CheckIcon,
   ArrowRightIcon,
+  FolderSimpleIcon,
 } from '@phosphor-icons/react';
 import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
@@ -52,7 +52,7 @@ export function ApplicantDetailView({ applicant, canEdit, availableInterviewers 
     .slice(0, 2);
 
   const nextStatuses = VALID_TRANSITIONS[applicant.status] ?? [];
-  const progressStages = getApplicantProgressStages(applicant.status);
+  const progressStages = getApplicantProgressStages(applicant.status, applicant.auditLogs);
 
   const handleAdvanceStatus = async (targetStatus: ApplicantStatus) => {
     setStatusError(null);
@@ -90,29 +90,47 @@ export function ApplicantDetailView({ applicant, canEdit, availableInterviewers 
       </nav>
 
       <div className="flex gap-6">
-        {/* Left column — dark navy sidebar panel */}
-        <div className="w-70 shrink-0 sticky top-6 self-start space-y-0 overflow-hidden rounded-2xl bg-brand-solid text-brand-solid-foreground shadow-lg shadow-brand-solid/20">
+        {/* Left column — light panel */}
+        <div className="w-64 shrink-0 sticky top-6 self-start overflow-hidden rounded-2xl">
           {/* Avatar and identity */}
           <div className="p-6 space-y-4">
-            <Avatar className="h-16 w-16 mx-auto ring-2 ring-white/20">
-              <AvatarFallback className="text-lg bg-white/15 text-white font-semibold">
+            <Avatar className="h-16 w-16 mx-auto">
+              <AvatarFallback className="text-lg bg-brand-ink text-white font-semibold">
                 {initials}
               </AvatarFallback>
             </Avatar>
             <div className="text-center">
-              <h2 className="text-lg font-semibold text-white">{applicant.legalName}</h2>
-              <p className="text-sm text-white/50 font-mono">{applicant.applicantId}</p>
+              <h2 className="text-base font-semibold text-brand-ink">{applicant.legalName}</h2>
+              <p className="text-xs text-muted-foreground font-mono mt-0.5">{applicant.applicantId}</p>
             </div>
             <div className="flex justify-center">
               <StatusBadge status={applicant.status} size="lg" />
             </div>
+            {/* Info badges — programme, diocese, admissions year */}
+            <div className="flex flex-wrap justify-center gap-1.5 pt-1">
+              {applicant.programme && (
+                <span className="rounded-full bg-muted px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground">
+                  {applicant.programme.courseTitle}
+                </span>
+              )}
+              {applicant.diocese && (
+                <span className="rounded-full bg-muted px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground">
+                  {applicant.diocese.name}
+                </span>
+              )}
+              {applicant.admissionsYear && (
+                <span className="rounded-full bg-muted px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground">
+                  {applicant.admissionsYear.label}
+                </span>
+              )}
+            </div>
           </div>
 
-          <div className="border-t border-white/10" />
+          <div className="border-t border-border" />
 
           {/* Progress stepper — with connecting lines */}
           <div className="px-6 py-5 space-y-0">
-            <span className="text-[10px] font-medium uppercase tracking-widest text-white/40 mb-3 block">
+            <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground mb-3 block">
               Journey
             </span>
             {progressStages.map((stage) => {
@@ -120,40 +138,66 @@ export function ApplicantDetailView({ applicant, canEdit, availableInterviewers 
                 <div key={stage.status} className="flex items-stretch gap-3">
                   {/* Icon + connecting line */}
                   <div className="flex flex-col items-center">
-                    {stage.isCompleted ? (
-                      <CheckCircleIcon size={18} weight="fill" className="text-emerald-400 shrink-0" />
+                    {stage.isCompleted && !stage.isCurrent ? (
+                      <div className="h-[18px] w-[18px] rounded-full bg-brand-ink flex items-center justify-center shrink-0">
+                        <CheckIcon size={10} weight="bold" className="text-white" />
+                      </div>
                     ) : stage.isCurrent ? (
-                      <div className="h-4.5 w-4.5 rounded-full border-2 border-white bg-white/20 shrink-0" />
+                      <div className="h-[18px] w-[18px] rounded-full border-2 border-brand-ink flex items-center justify-center shrink-0">
+                        <div className="h-[6px] w-[6px] rounded-full bg-brand-ink" />
+                      </div>
                     ) : (
-                      <CircleIcon size={18} weight="light" className="text-white/25 shrink-0" />
+                      <div className="h-[18px] w-[18px] rounded-full border-2 border-border shrink-0" />
                     )}
                     {!stage.isLast && (
-                      <div className={`w-px flex-1 my-1 ${stage.isCompleted ? 'bg-emerald-400/40' : 'bg-white/10'}`} />
+                      <div className={`w-px flex-1 my-0.5 ${stage.isCompleted && !stage.isCurrent ? 'bg-brand-ink/30' : 'bg-border'}`} />
                     )}
                   </div>
-                  {/* Label */}
-                  <span
-                    className={`text-sm pb-3 ${
-                      stage.isCurrent
-                        ? 'font-semibold text-white'
-                        : stage.isCompleted
-                          ? 'text-emerald-400/80'
-                          : 'text-white/30'
-                    }`}
-                  >
-                    {stage.label}
-                  </span>
+                  {/* Label + sub-label */}
+                  <div className="pb-3">
+                    <span
+                      className={`text-sm block ${
+                        stage.isCurrent
+                          ? 'font-semibold text-brand-ink'
+                          : stage.isCompleted
+                            ? 'text-brand-ink'
+                            : 'text-muted-foreground/40'
+                      }`}
+                    >
+                      {stage.label}
+                    </span>
+                    {stage.isCurrent && (
+                      <span className="text-[11px] text-muted-foreground">In Progress</span>
+                    )}
+                    {stage.isCompleted && !stage.isCurrent && stage.completedAt && (
+                      <span className="text-[11px] text-muted-foreground">
+                        Completed {stage.completedAt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                      </span>
+                    )}
+                  </div>
                 </div>
               );
             })}
           </div>
 
+          {/* OneDrive Folder link */}
+          <div className="border-t border-border" />
+          <div className="px-6 py-3">
+            <a
+              href="#"
+              className="flex items-center gap-2 text-xs text-muted-foreground hover:text-brand-ink transition-colors"
+            >
+              <FolderSimpleIcon size={14} weight="light" className="shrink-0" />
+              OneDrive Folder
+            </a>
+          </div>
+
           {/* Quick Actions */}
           {canEdit && nextStatuses.length > 0 && (
             <>
-              <div className="border-t border-white/10" />
+              <div className="border-t border-border" />
               <div className="px-6 py-4 space-y-2">
-                <span className="text-[10px] font-medium uppercase tracking-widest text-white/40">
+                <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
                   Quick Actions
                 </span>
                 {statusError && (
@@ -166,29 +210,14 @@ export function ApplicantDetailView({ applicant, canEdit, availableInterviewers 
                     key={target}
                     variant="outline"
                     size="sm"
-                    className="w-full justify-start text-sm border-white/15 text-white/80 hover:bg-white/10 hover:text-white hover:border-white/25 rounded-xl"
+                    className="w-full justify-start text-sm rounded-xl"
                     disabled={isPending}
                     onClick={() => setPendingStatusTarget(target)}
                   >
-                    <ArrowRightIcon size={14} weight="light" className="mr-2" />
+                    <ArrowRightIcon size={14} weight="light" className="mr-2 shrink-0" />
                     {STATUS_LABELS[target]}
                   </Button>
                 ))}
-              </div>
-            </>
-          )}
-
-          {/* Admissions Year */}
-          {applicant.admissionsYear && (
-            <>
-              <div className="border-t border-white/10" />
-              <div className="px-6 py-4">
-                <span className="text-[10px] font-medium uppercase tracking-widest text-white/40">
-                  Admissions Year
-                </span>
-                <p className="mt-1 text-sm font-medium text-white">
-                  {applicant.admissionsYear.label}
-                </p>
               </div>
             </>
           )}
@@ -196,20 +225,22 @@ export function ApplicantDetailView({ applicant, canEdit, availableInterviewers 
 
         {/* Right content */}
         <div className="flex-1 min-w-0">
-          <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val)} className="gap-6">
-            <TabsList className="overflow-x-auto rounded-xl">
-              <TabsTrigger value="personal">Personal</TabsTrigger>
-              <TabsTrigger value="ecclesial">Ecclesial</TabsTrigger>
-              <TabsTrigger value="bap">BAP</TabsTrigger>
-              <TabsTrigger value="interview">Interview</TabsTrigger>
-              <TabsTrigger value="offer">Offer</TabsTrigger>
-              <TabsTrigger value="registration">Registration</TabsTrigger>
-              <TabsTrigger value="documents">Documents</TabsTrigger>
-              <TabsTrigger value="notes">Notes</TabsTrigger>
-              <TabsTrigger value="timeline">Timeline</TabsTrigger>
-            </TabsList>
+          <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val)} className="gap-4">
+            <div className="overflow-x-auto">
+              <TabsList variant="line" className="w-max min-w-full flex gap-0 rounded-none bg-transparent px-0 h-auto pb-0">
+                <TabsTrigger value="personal" className="px-4 pb-2.5 pt-1 rounded-none text-sm data-active:text-brand-ink data-active:border-b-brand-ink data-active:font-semibold">Personal</TabsTrigger>
+                <TabsTrigger value="ecclesial" className="px-4 pb-2.5 pt-1 rounded-none text-sm data-active:text-brand-ink data-active:border-b-brand-ink data-active:font-semibold">Ecclesial</TabsTrigger>
+                <TabsTrigger value="bap" className="px-4 pb-2.5 pt-1 rounded-none text-sm data-active:text-brand-ink data-active:border-b-brand-ink data-active:font-semibold">BAP</TabsTrigger>
+                <TabsTrigger value="interview" className="px-4 pb-2.5 pt-1 rounded-none text-sm data-active:text-brand-ink data-active:border-b-brand-ink data-active:font-semibold">Interview</TabsTrigger>
+                <TabsTrigger value="offer" className="px-4 pb-2.5 pt-1 rounded-none text-sm data-active:text-brand-ink data-active:border-b-brand-ink data-active:font-semibold">Offer</TabsTrigger>
+                <TabsTrigger value="registration" className="px-4 pb-2.5 pt-1 rounded-none text-sm data-active:text-brand-ink data-active:border-b-brand-ink data-active:font-semibold">Registration</TabsTrigger>
+                <TabsTrigger value="documents" className="px-4 pb-2.5 pt-1 rounded-none text-sm data-active:text-brand-ink data-active:border-b-brand-ink data-active:font-semibold">Documents</TabsTrigger>
+                <TabsTrigger value="notes" className="px-4 pb-2.5 pt-1 rounded-none text-sm data-active:text-brand-ink data-active:border-b-brand-ink data-active:font-semibold">Notes</TabsTrigger>
+                <TabsTrigger value="timeline" className="px-4 pb-2.5 pt-1 rounded-none text-sm data-active:text-brand-ink data-active:border-b-brand-ink data-active:font-semibold">Timeline</TabsTrigger>
+              </TabsList>
+            </div>
 
-            <div className="rounded-2xl border border-black/6 bg-white p-6 shadow-sm shadow-black/3">
+            <div className="rounded-2xl border border-border bg-background p-6 shadow-sm">
               <TabsContent value="personal"><PersonalTab applicant={applicant} /></TabsContent>
               <TabsContent value="ecclesial"><EcclesialTab applicant={applicant} /></TabsContent>
               <TabsContent value="bap"><BAPTab applicant={applicant} /></TabsContent>
