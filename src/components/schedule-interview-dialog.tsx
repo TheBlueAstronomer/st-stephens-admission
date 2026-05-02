@@ -1,7 +1,5 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
 import {
   CalendarBlankIcon,
   WarningIcon,
@@ -30,9 +28,8 @@ import {
   CommandGroup,
   CommandItem,
 } from '@/components/ui/command';
-import { scheduleInterview } from '@/app/(staff)/interviews/actions';
-import type { BAPStageStatus, InterviewType } from '@/generated/prisma/client';
-import { toast } from 'sonner';
+import { useScheduleInterviewDialog } from '@/components/use-schedule-interview-dialog';
+import type { BAPStageStatus } from '@/generated/prisma/client';
 
 interface Interviewer {
   id: string;
@@ -61,72 +58,34 @@ export function ScheduleInterviewDialog({
   hasStageOneBAPException,
   availableInterviewers,
 }: ScheduleInterviewDialogProps) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
-  const [interviewType, setInterviewType] = useState<InterviewType | null>(null);
-  const [scheduledDate, setScheduledDate] = useState('');
-  const [scheduledTime, setScheduledTime] = useState('');
-  const [selectedInterviewers, setSelectedInterviewers] = useState<Interviewer[]>([]);
-  const [showInterviewerSearch, setShowInterviewerSearch] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
   const bapBlocked =
     bapStageOneStatus !== 'COMPLETED' &&
     bapStageOneStatus !== 'SCHEDULED' &&
     !hasStageOneBAPException;
 
-  const canSubmit =
-    !bapBlocked &&
-    interviewType !== null &&
-    scheduledDate !== '' &&
-    scheduledTime !== '' &&
-    selectedInterviewers.length > 0;
-
-  const handleAddInterviewer = (interviewer: Interviewer) => {
-    if (!selectedInterviewers.find((i) => i.id === interviewer.id)) {
-      setSelectedInterviewers([...selectedInterviewers, interviewer]);
-    }
-    setShowInterviewerSearch(false);
-  };
-
-  const handleRemoveInterviewer = (id: string) => {
-    setSelectedInterviewers(selectedInterviewers.filter((i) => i.id !== id));
-  };
-
-  const handleSubmit = () => {
-    if (!canSubmit || !interviewType) return;
-    setError(null);
-
-    const scheduledAt = new Date(`${scheduledDate}T${scheduledTime}`).toISOString();
-
-    startTransition(async () => {
-      const result = await scheduleInterview({
-        applicantId,
-        interviewType,
-        scheduledAt,
-        interviewerIds: selectedInterviewers.map((i) => i.id),
-      });
-
-      if (!result.success) {
-        setError(result.error ?? 'Failed to schedule interview.');
-      } else {
-        toast.success(
-          `Interview scheduled for ${new Date(scheduledAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}`,
-        );
-        onOpenChange(false);
-        resetForm();
-        router.refresh();
-      }
-    });
-  };
-
-  const resetForm = () => {
-    setInterviewType(null);
-    setScheduledDate('');
-    setScheduledTime('');
-    setSelectedInterviewers([]);
-    setError(null);
-  };
+  const {
+    isPending,
+    interviewType,
+    setInterviewType,
+    scheduledDate,
+    setScheduledDate,
+    scheduledTime,
+    setScheduledTime,
+    selectedInterviewers,
+    showInterviewerSearch,
+    setShowInterviewerSearch,
+    error,
+    canSubmit,
+    resetForm,
+    handleAddInterviewer,
+    handleRemoveInterviewer,
+    handleSubmit,
+  } = useScheduleInterviewDialog({
+    applicantId,
+    applicantName,
+    onOpenChange,
+    bapBlocked,
+  });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -138,7 +97,7 @@ export function ScheduleInterviewDialog({
               <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
                 Interview Management
               </span>
-              <DialogTitle className="text-xl font-semibold text-[#1A2744]">
+              <DialogTitle className="text-xl font-semibold text-brand-ink">
                 Schedule Interview
               </DialogTitle>
               <DialogDescription className="sr-only">
@@ -147,9 +106,9 @@ export function ScheduleInterviewDialog({
             </DialogHeader>
 
             {/* Applicant info */}
-            <div className="flex items-center gap-3 rounded-xl bg-[#F8F7F5] p-3">
+            <div className="flex items-center gap-3 rounded-xl bg-surface-subtle p-3">
               <div>
-                <p className="text-sm font-medium text-[#1A2744]">{applicantName}</p>
+                <p className="text-sm font-medium text-brand-ink">{applicantName}</p>
                 <p className="text-xs text-muted-foreground font-mono">{applicantDisplayId}</p>
               </div>
               {bapStageOneStatus && (
@@ -188,8 +147,8 @@ export function ScheduleInterviewDialog({
                     onClick={() => setInterviewType(type)}
                     className={`rounded-xl border px-4 py-3 text-sm font-medium transition-all ${
                       interviewType === type
-                        ? 'border-[#1A2744] bg-[#1A2744] text-white shadow-sm'
-                        : 'border-black/8 bg-white text-[#1A2744] hover:border-[#1A2744]/30'
+                        ? 'border-brand-solid bg-brand-solid text-brand-solid-foreground shadow-sm'
+                        : 'border-black/8 bg-white text-brand-ink hover:border-brand-ink/30'
                     }`}
                   >
                     {type === 'EXPLORATORY_VISIT' ? 'Exploratory Visit' : 'Visit-Interview'}
@@ -232,10 +191,10 @@ export function ScheduleInterviewDialog({
               {selectedInterviewers.map((interviewer) => (
                 <div
                   key={interviewer.id}
-                  className="flex items-center justify-between rounded-xl bg-[#F8F7F5] px-3 py-2"
+                  className="flex items-center justify-between rounded-xl bg-surface-subtle px-3 py-2"
                 >
                   <div>
-                    <p className="text-sm font-medium text-[#1A2744]">{interviewer.name}</p>
+                    <p className="text-sm font-medium text-brand-ink">{interviewer.name}</p>
                     <p className="text-xs text-muted-foreground">{interviewer.email}</p>
                   </div>
                   <button
@@ -276,7 +235,7 @@ export function ScheduleInterviewDialog({
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowInterviewerSearch(true)}
-                  className="text-sm text-muted-foreground hover:text-[#1A2744]"
+                  className="text-sm text-muted-foreground hover:text-brand-ink"
                 >
                   <PlusIcon size={14} className="mr-1" />
                   Add panel member
@@ -305,7 +264,7 @@ export function ScheduleInterviewDialog({
                 Cancel
               </DialogClose>
               <Button
-                className="rounded-full bg-[#1A2744] hover:bg-[#1A2744]/90 text-white px-6"
+                className="rounded-full bg-brand-solid px-6 text-brand-solid-foreground hover:bg-brand-solid/90"
                 disabled={!canSubmit || isPending || bapBlocked}
                 onClick={handleSubmit}
               >

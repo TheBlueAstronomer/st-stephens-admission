@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { StatusBadge } from '@/components/status-badge';
 import type { ApplicantStatus, BAPStageStatus } from '@/generated/prisma/client';
+import { formatDate } from '@/lib/formatters/date';
 
 interface ApplicantRow {
   id: string;
@@ -57,10 +58,10 @@ export function ApplicantTable({
 
   return (
     <div className="space-y-4">
-      <div className="overflow-hidden rounded-2xl border border-black/[0.06] bg-white shadow-sm shadow-black/[0.03]">
+      <div className="overflow-hidden rounded-2xl border border-black/6 bg-white shadow-sm shadow-black/3">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-black/[0.06]">
+            <tr className="border-b border-black/6">
               <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Name</th>
               <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Status</th>
               <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Programme</th>
@@ -82,7 +83,7 @@ export function ApplicantTable({
               return (
                 <tr
                   key={applicant.id}
-                  className="cursor-pointer border-b border-black/[0.04] transition-all duration-150 hover:bg-[#1A2744]/[0.02]"
+                  className="cursor-pointer border-b border-black/4 transition-all duration-150 hover:bg-brand-ink/2"
                   style={{
                     animation: `fadeInUp 300ms ${idx * 30}ms both`,
                   }}
@@ -92,7 +93,7 @@ export function ApplicantTable({
                       href={`/applicants/${applicant.id}`}
                       className="block"
                     >
-                      <div className="font-medium text-[#1A2744]">
+                      <div className="font-medium text-brand-ink">
                         {applicant.legalName}
                       </div>
                       <div className="text-xs text-muted-foreground">
@@ -127,7 +128,7 @@ export function ApplicantTable({
                   <td className="px-4 py-3 text-muted-foreground">
                     <Link href={`/applicants/${applicant.id}`} className="block">
                       {nextInterview?.scheduledAt
-                        ? new Date(nextInterview.scheduledAt).toLocaleDateString('en-GB', {
+                        ? formatDate(nextInterview.scheduledAt, {
                             day: 'numeric',
                             month: 'short',
                           })
@@ -160,17 +161,17 @@ export function ApplicantTable({
           <button
             onClick={() => goToPage(page - 1)}
             disabled={page <= 1}
-            className="rounded-full border border-black/[0.06] px-3 py-1.5 text-sm transition-all hover:bg-[#1A2744]/[0.04] hover:border-[#1A2744]/20 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:border-black/[0.06]"
+            className="rounded-full border border-black/6 px-3 py-1.5 text-sm transition-all hover:border-brand-ink/20 hover:bg-brand-ink/4 disabled:opacity-30 disabled:hover:border-black/6 disabled:hover:bg-transparent"
           >
             Previous
           </button>
-          <span className="px-3 py-1.5 text-sm font-medium text-[#1A2744] tabular-nums">
+          <span className="px-3 py-1.5 text-sm font-medium text-brand-ink tabular-nums">
             {page} / {totalPages}
           </span>
           <button
             onClick={() => goToPage(page + 1)}
             disabled={page >= totalPages}
-            className="rounded-full border border-black/[0.06] px-3 py-1.5 text-sm transition-all hover:bg-[#1A2744]/[0.04] hover:border-[#1A2744]/20 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:border-black/[0.06]"
+            className="rounded-full border border-black/6 px-3 py-1.5 text-sm transition-all hover:border-brand-ink/20 hover:bg-brand-ink/4 disabled:opacity-30 disabled:hover:border-black/6 disabled:hover:bg-transparent"
           >
             Next
           </button>

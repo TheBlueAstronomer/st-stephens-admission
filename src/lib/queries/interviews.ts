@@ -1,4 +1,38 @@
+import type { Prisma } from '@/generated/prisma/client';
 import { prisma } from '@/lib/db';
+
+const interviewApplicantSelect = {
+  id: true,
+  applicantId: true,
+  legalName: true,
+  preferredName: true,
+  status: true,
+  programme: { select: { courseTitle: true } },
+  diocese: { select: { name: true } },
+  bapStatus: { select: { stageOneStatus: true } },
+  ecclesialProfile: {
+    select: { directorOfOrdinandsName: true },
+  },
+} satisfies Prisma.ApplicantSelect;
+
+const interviewDetailInclude = {
+  applicant: {
+    select: interviewApplicantSelect,
+  },
+  panelMembers: {
+    select: {
+      userId: true,
+      user: { select: { id: true, name: true, email: true, role: true } },
+    },
+  },
+  createdBy: { select: { id: true, name: true } },
+  updatedBy: { select: { id: true, name: true } },
+  invitationSentBy: { select: { id: true, name: true } },
+} satisfies Prisma.InterviewInclude;
+
+export type InterviewDetailRecord = Prisma.InterviewGetPayload<{
+  include: typeof interviewDetailInclude;
+}>;
 
 /**
  * Get a single interview by ID with all related data.
@@ -6,26 +40,7 @@ import { prisma } from '@/lib/db';
 export async function getInterviewById(id: string) {
   return prisma.interview.findUnique({
     where: { id },
-    include: {
-      applicant: {
-        include: {
-          programme: { select: { courseTitle: true } },
-          diocese: { select: { name: true } },
-          bapStatus: { select: { stageOneStatus: true } },
-          ecclesialProfile: {
-            select: { directorOfOrdinandsName: true },
-          },
-        },
-      },
-      panelMembers: {
-        include: {
-          user: { select: { id: true, name: true, email: true, role: true } },
-        },
-      },
-      createdBy: { select: { id: true, name: true } },
-      updatedBy: { select: { id: true, name: true } },
-      invitationSentBy: { select: { id: true, name: true } },
-    },
+    include: interviewDetailInclude,
   });
 }
 
@@ -36,32 +51,7 @@ export async function getInterviewById(id: string) {
 export async function getInterviewForAcademicStaff(id: string) {
   return prisma.interview.findUnique({
     where: { id },
-    include: {
-      applicant: {
-        select: {
-          id: true,
-          applicantId: true,
-          legalName: true,
-          preferredName: true,
-          status: true,
-          programme: { select: { courseTitle: true } },
-          diocese: { select: { name: true } },
-          bapStatus: { select: { stageOneStatus: true } },
-          ecclesialProfile: {
-            select: { directorOfOrdinandsName: true },
-          },
-          // Excluded: dateOfBirth, email, phone, address*, country, postcode
-        },
-      },
-      panelMembers: {
-        include: {
-          user: { select: { id: true, name: true, email: true, role: true } },
-        },
-      },
-      createdBy: { select: { id: true, name: true } },
-      updatedBy: { select: { id: true, name: true } },
-      invitationSentBy: { select: { id: true, name: true } },
-    },
+    include: interviewDetailInclude,
   });
 }
 

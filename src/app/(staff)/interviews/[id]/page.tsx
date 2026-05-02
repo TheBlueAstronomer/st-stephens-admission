@@ -1,4 +1,3 @@
-import type React from 'react';
 import { notFound } from 'next/navigation';
 import { auth } from '@/lib/auth';
 import { getInterviewById, getInterviewForAcademicStaff } from '@/lib/queries/interviews';
@@ -58,7 +57,7 @@ export default async function InterviewDetailPage({
 
   return (
     <InterviewDetailView
-      interview={interview as React.ComponentProps<typeof InterviewDetailView>['interview']}
+      interview={interview}
       canRecordOutcome={canRecordOutcome}
       canEdit={canEdit}
       isAcademicStaff={isAcademicStaff}

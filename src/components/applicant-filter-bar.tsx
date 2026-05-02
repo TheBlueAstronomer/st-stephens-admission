@@ -95,7 +95,7 @@ export function ApplicantFilterBar({
             onChange={(e) => setSearchValue(e.target.value)}
             onKeyDown={handleSearchKeyDown}
             onBlur={() => updateFilter('search', searchValue || undefined)}
-            className="rounded-full pl-9 bg-[#F8F7F5] border-transparent focus:border-[#1A2744]/20 focus:bg-white h-9 text-sm"
+            className="h-9 rounded-full border-transparent bg-surface-subtle pl-9 text-sm focus:border-brand-ink/20 focus:bg-white"
           />
         </div>
 
@@ -103,7 +103,7 @@ export function ApplicantFilterBar({
         <select
           value={filters.status ?? ''}
           onChange={(e) => updateFilter('status', e.target.value || undefined)}
-          className="h-9 rounded-full border border-black/8 bg-[#F8F7F5] px-3 py-1.5 text-sm text-muted-foreground hover:border-[#1A2744]/20 focus:border-[#1A2744]/30 focus:outline-none transition-colors cursor-pointer"
+          className="h-9 cursor-pointer rounded-full border border-black/8 bg-surface-subtle px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:border-brand-ink/20 focus:border-brand-ink/30 focus:outline-none"
         >
           <option value="">All Statuses</option>
           {statuses.map(([value, label]) => (
@@ -117,7 +117,7 @@ export function ApplicantFilterBar({
         <select
           value={filters.admissionsYearId ?? ''}
           onChange={(e) => updateFilter('admissionsYearId', e.target.value || undefined)}
-          className="h-9 rounded-full border border-black/8 bg-[#F8F7F5] px-3 py-1.5 text-sm text-muted-foreground hover:border-[#1A2744]/20 focus:border-[#1A2744]/30 focus:outline-none transition-colors cursor-pointer"
+          className="h-9 cursor-pointer rounded-full border border-black/8 bg-surface-subtle px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:border-brand-ink/20 focus:border-brand-ink/30 focus:outline-none"
         >
           <option value="">All Years</option>
           {referenceData.admissionsYears.map((y) => (
@@ -131,7 +131,7 @@ export function ApplicantFilterBar({
         <select
           value={filters.programmeId ?? ''}
           onChange={(e) => updateFilter('programmeId', e.target.value || undefined)}
-          className="h-9 rounded-full border border-black/8 bg-[#F8F7F5] px-3 py-1.5 text-sm text-muted-foreground hover:border-[#1A2744]/20 focus:border-[#1A2744]/30 focus:outline-none transition-colors cursor-pointer"
+          className="h-9 cursor-pointer rounded-full border border-black/8 bg-surface-subtle px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:border-brand-ink/20 focus:border-brand-ink/30 focus:outline-none"
         >
           <option value="">All Programmes</option>
           {referenceData.programmes.map((p) => (
@@ -146,7 +146,7 @@ export function ApplicantFilterBar({
           <Button
             variant="ghost"
             size="sm"
-            className="ml-auto text-muted-foreground hover:text-[#1A2744]"
+            className="ml-auto text-muted-foreground hover:text-brand-ink"
             onClick={handleExport}
           >
             <DownloadSimpleIcon size={15} weight="light" className="mr-1.5" />
@@ -161,7 +161,7 @@ export function ApplicantFilterBar({
           {activeFilters.map(([key, value]) => (
             <Badge
               key={key}
-              className="rounded-full bg-[#1A2744]/10 text-[#1A2744] border-0 pl-2.5 pr-1.5 py-1 text-xs font-medium transition-all"
+              className="rounded-full border-0 bg-brand-ink/10 py-1 pl-2.5 pr-1.5 text-xs font-medium text-brand-ink transition-all"
               style={{ animation: 'chipIn 200ms both' }}
             >
               {key === 'search' ? `"${value}"` : value}
@@ -178,7 +178,7 @@ export function ApplicantFilterBar({
           ))}
           <button
             onClick={clearAllFilters}
-            className="text-xs text-muted-foreground hover:text-[#1A2744] underline"
+            className="text-xs text-muted-foreground underline hover:text-brand-ink"
           >
             Clear all
           </button>

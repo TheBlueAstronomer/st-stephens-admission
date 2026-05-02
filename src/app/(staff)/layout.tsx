@@ -19,7 +19,7 @@ export default async function StaffLayout({
   return (
     <TooltipProvider>
       <SidebarProvider>
-        <div className="flex h-screen w-full bg-[#F8F7F5]">
+        <div className="flex h-screen w-full bg-surface-subtle">
           <AppSidebar user={session.user} />
           <div className="flex flex-1 flex-col overflow-hidden">
             <AppTopbar user={session.user} />

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
+import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Sheet,
@@ -45,6 +45,7 @@ export function CreateApplicantSheet({
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
+  const resolver = zodResolver(createApplicantSchema as never) as Resolver<CreateApplicantInput>;
 
   const {
     register,
@@ -52,8 +53,7 @@ export function CreateApplicantSheet({
     reset,
     formState: { errors },
   } = useForm<CreateApplicantInput>({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resolver: zodResolver(createApplicantSchema as any),
+    resolver,
     defaultValues: {
       legalName: '',
       email: '',
@@ -87,12 +87,12 @@ export function CreateApplicantSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-120 overflow-y-auto rounded-l-[1.5rem] bg-[#FAFAF9] px-6 pb-8">
+      <SheetContent side="right" className="w-120 overflow-y-auto rounded-l-[1.5rem] bg-canvas px-6 pb-8">
         <SheetHeader className="mb-6 px-0">
           <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
             Applicant Management
           </span>
-          <SheetTitle className="text-2xl font-semibold text-[#1A2744]">
+          <SheetTitle className="text-2xl font-semibold text-brand-ink">
             Add Applicant
           </SheetTitle>
           <SheetDescription>
@@ -118,27 +118,27 @@ export function CreateApplicantSheet({
             <FieldSeparator>Personal</FieldSeparator>
             <div className="mt-3 space-y-3">
               <Field>
-                <Label className="text-sm text-[#1A2744]/80">Legal Name *</Label>
+                <Label className="text-sm text-brand-ink/80">Legal Name *</Label>
                 <Input {...register('legalName')} placeholder="Full legal name" />
                 {errors.legalName?.message && <FieldError>{errors.legalName.message}</FieldError>}
               </Field>
               <Field>
-                <Label className="text-sm text-[#1A2744]/80">Preferred Name</Label>
+                <Label className="text-sm text-brand-ink/80">Preferred Name</Label>
                 <Input {...register('preferredName')} placeholder="Preferred name" />
                 {errors.preferredName?.message && <FieldError>{errors.preferredName.message}</FieldError>}
               </Field>
               <Field>
-                <Label className="text-sm text-[#1A2744]/80">Date of Birth</Label>
+                <Label className="text-sm text-brand-ink/80">Date of Birth</Label>
                 <Input {...register('dateOfBirth')} type="date" />
                 {errors.dateOfBirth?.message && <FieldError>{errors.dateOfBirth.message}</FieldError>}
               </Field>
               <Field>
-                <Label className="text-sm text-[#1A2744]/80">Email *</Label>
+                <Label className="text-sm text-brand-ink/80">Email *</Label>
                 <Input {...register('email')} type="email" placeholder="applicant@example.com" />
                 {errors.email?.message && <FieldError>{errors.email.message}</FieldError>}
               </Field>
               <Field>
-                <Label className="text-sm text-[#1A2744]/80">Phone</Label>
+                <Label className="text-sm text-brand-ink/80">Phone</Label>
                 <Input {...register('phone')} placeholder="+44 ..." />
                 {errors.phone?.message && <FieldError>{errors.phone.message}</FieldError>}
               </Field>
@@ -150,21 +150,21 @@ export function CreateApplicantSheet({
             <FieldSeparator>Address</FieldSeparator>
             <div className="mt-3 space-y-3">
               <Field>
-                <Label className="text-sm text-[#1A2744]/80">Address Line 1</Label>
+                <Label className="text-sm text-brand-ink/80">Address Line 1</Label>
                 <Input {...register('addressLineOne')} />
               </Field>
               <div className="grid grid-cols-2 gap-3">
                 <Field>
-                  <Label className="text-sm text-[#1A2744]/80">City</Label>
+                  <Label className="text-sm text-brand-ink/80">City</Label>
                   <Input {...register('city')} />
                 </Field>
                 <Field>
-                  <Label className="text-sm text-[#1A2744]/80">Postcode</Label>
+                  <Label className="text-sm text-brand-ink/80">Postcode</Label>
                   <Input {...register('postcode')} />
                 </Field>
               </div>
               <Field>
-                <Label className="text-sm text-[#1A2744]/80">Country</Label>
+                <Label className="text-sm text-brand-ink/80">Country</Label>
                 <Input {...register('country')} />
               </Field>
             </div>
@@ -175,7 +175,7 @@ export function CreateApplicantSheet({
             <FieldSeparator>Ecclesial</FieldSeparator>
             <div className="mt-3 space-y-3">
               <Field>
-                <Label className="text-sm text-[#1A2744]/80">Diocese</Label>
+                <Label className="text-sm text-brand-ink/80">Diocese</Label>
                 <NativeSelect {...register('dioceseId')} className="w-full">
                   <NativeSelectOption value="">Select diocese...</NativeSelectOption>
                   {referenceData.dioceses.map((d) => (
@@ -187,11 +187,11 @@ export function CreateApplicantSheet({
                 {errors.dioceseId?.message && <FieldError>{errors.dioceseId.message}</FieldError>}
               </Field>
               <Field>
-                <Label className="text-sm text-[#1A2744]/80">DDO Name</Label>
+                <Label className="text-sm text-brand-ink/80">DDO Name</Label>
                 <Input {...register('directorOfOrdinandsName')} />
               </Field>
               <Field>
-                <Label className="text-sm text-[#1A2744]/80">DDO Email</Label>
+                <Label className="text-sm text-brand-ink/80">DDO Email</Label>
                 <Input {...register('directorOfOrdinandsEmail')} type="email" />
               </Field>
             </div>
@@ -202,7 +202,7 @@ export function CreateApplicantSheet({
             <FieldSeparator>BAP</FieldSeparator>
             <div className="mt-3 space-y-3">
               <Field>
-                <Label className="text-sm text-[#1A2744]/80">Stage 1 Status</Label>
+                <Label className="text-sm text-brand-ink/80">Stage 1 Status</Label>
                 <NativeSelect {...register('stageOneStatus')} className="w-full">
                   <NativeSelectOption value="">Select status...</NativeSelectOption>
                   <NativeSelectOption value="INCOMPLETE">Incomplete</NativeSelectOption>
@@ -212,7 +212,7 @@ export function CreateApplicantSheet({
                 </NativeSelect>
               </Field>
               <Field>
-                <Label className="text-sm text-[#1A2744]/80">Stage 1 Date</Label>
+                <Label className="text-sm text-brand-ink/80">Stage 1 Date</Label>
                 <Input {...register('stageOneDate')} type="date" />
               </Field>
             </div>
@@ -223,7 +223,7 @@ export function CreateApplicantSheet({
             <FieldSeparator>Programme</FieldSeparator>
             <div className="mt-3 space-y-3">
               <Field>
-                <Label className="text-sm text-[#1A2744]/80">Programme *</Label>
+                <Label className="text-sm text-brand-ink/80">Programme *</Label>
                 <NativeSelect {...register('programmeId')} className="w-full">
                   <NativeSelectOption value="">Select programme...</NativeSelectOption>
                   {referenceData.programmes.map((p) => (
@@ -235,7 +235,7 @@ export function CreateApplicantSheet({
                 {errors.programmeId?.message && <FieldError>{errors.programmeId.message}</FieldError>}
               </Field>
               <Field>
-                <Label className="text-sm text-[#1A2744]/80">Admissions Year *</Label>
+                <Label className="text-sm text-brand-ink/80">Admissions Year *</Label>
                 <NativeSelect {...register('admissionsYearId')} className="w-full">
                   <NativeSelectOption value="">Select year...</NativeSelectOption>
                   {referenceData.admissionsYears.map((y) => (
@@ -254,7 +254,7 @@ export function CreateApplicantSheet({
             <Button
               type="button"
               variant="ghost"
-              className="rounded-full text-muted-foreground hover:text-[#1A2744]"
+              className="rounded-full text-muted-foreground hover:text-brand-ink"
               onClick={() => {
                 reset();
                 onOpenChange(false);
@@ -265,7 +265,7 @@ export function CreateApplicantSheet({
             <Button
               type="submit"
               disabled={isPending}
-              className="rounded-full bg-[#1A2744] text-white hover:bg-[#23304d] shadow-sm shadow-[#1A2744]/20 px-6"
+              className="rounded-full bg-brand-solid px-6 text-brand-solid-foreground shadow-sm shadow-brand-solid/20 hover:bg-brand-solid/90"
             >
               {isPending && (
                 <Spinner className="mr-2" />

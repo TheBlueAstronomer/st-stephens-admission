@@ -27,7 +27,7 @@ export function ApplicantListHeader({
   return (
     <div className="flex items-center justify-between">
       <div className="space-y-0.5">
-        <h1 className="text-2xl font-semibold tracking-tight text-[#1A2744]">
+        <h1 className="text-2xl font-semibold tracking-tight text-brand-ink">
           Applicants
         </h1>
         {currentYear && (
@@ -42,14 +42,14 @@ export function ApplicantListHeader({
           <Button
             variant="outline"
             size="sm"
-            className="rounded-full border-black/8 text-muted-foreground hover:text-[#1A2744] hover:border-[#1A2744]/20"
+            className="rounded-full border-black/8 text-muted-foreground hover:border-brand-ink/20 hover:text-brand-ink"
           >
             <UploadIcon size={15} weight="light" className="mr-1.5" />
             Import
           </Button>
           <Button
             size="sm"
-            className="rounded-full bg-[#1A2744] text-white hover:bg-[#23304d] shadow-sm shadow-[#1A2744]/20"
+            className="rounded-full bg-brand-solid text-brand-solid-foreground shadow-sm shadow-brand-solid/20 hover:bg-brand-solid/90"
             onClick={() => setSheetOpen(true)}
           >
             <PlusIcon size={15} weight="bold" className="mr-1.5" />

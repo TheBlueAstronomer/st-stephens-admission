@@ -64,7 +64,7 @@ export function AppTopbar({ user }: AppTopbarProps) {
                 {user.image && (
                   <AvatarImage src={user.image} alt={user.name} />
                 )}
-                <AvatarFallback className="text-xs bg-[#1A2744]/10 text-[#1A2744]">
+                <AvatarFallback className="text-xs bg-brand-ink/10 text-brand-ink">
                   {initials}
                 </AvatarFallback>
               </Avatar>

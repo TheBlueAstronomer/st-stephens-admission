@@ -8,6 +8,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import type { UserRole } from '@/generated/prisma/client';
+import { formatDateTime } from '@/lib/formatters/date';
 
 interface InterviewListItem {
   id: string;
@@ -40,7 +41,7 @@ export function InterviewListView({ interviews, userRole }: InterviewListViewPro
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-[#1A2744]">Interviews</h1>
+          <h1 className="text-2xl font-semibold text-brand-ink">Interviews</h1>
           <p className="text-sm text-muted-foreground mt-1">
             {userRole === 'ACADEMIC_STAFF'
               ? 'Interviews assigned to you'
@@ -73,7 +74,7 @@ export function InterviewListView({ interviews, userRole }: InterviewListViewPro
               <div className="flex items-start justify-between">
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-[#1A2744]">
+                    <span className="text-sm font-semibold text-brand-ink">
                       {interview.applicant.legalName}
                     </span>
                     <span className="text-xs font-mono text-muted-foreground">
@@ -88,17 +89,19 @@ export function InterviewListView({ interviews, userRole }: InterviewListViewPro
                   {interview.scheduledAt && (
                     <p className="text-xs text-muted-foreground flex items-center gap-1">
                       <CalendarBlankIcon size={12} weight="light" />
-                      {new Date(interview.scheduledAt).toLocaleDateString('en-GB', {
-                        weekday: 'short',
-                        day: 'numeric',
-                        month: 'long',
-                        year: 'numeric',
-                      })}
-                      {' at '}
-                      {new Date(interview.scheduledAt).toLocaleTimeString('en-GB', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
+                      {formatDateTime(
+                        interview.scheduledAt,
+                        {
+                          weekday: 'short',
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric',
+                        },
+                        {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        },
+                      )}
                     </p>
                   )}
                   {interview.panelMembers.length > 0 && (
@@ -110,7 +113,7 @@ export function InterviewListView({ interviews, userRole }: InterviewListViewPro
                 </div>
 
                 <div className="flex flex-col items-end gap-1.5">
-                  <Badge className="border-0 bg-[#1A2744] text-white text-xs">
+                  <Badge className="border-0 bg-brand-solid text-brand-solid-foreground text-xs">
                     {interview.interviewType === 'EXPLORATORY_VISIT' ? 'Exploratory' : 'Visit-Interview'}
                   </Badge>
                   <Badge

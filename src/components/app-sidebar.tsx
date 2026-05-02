@@ -43,7 +43,7 @@ const ICON_MAP: Record<string, React.ComponentType<React.ComponentProps<typeof H
 
 const ROLE_BADGE_COLORS: Record<UserRole, string> = {
   ADMISSIONS_STAFF: 'bg-white/20 text-white',
-  ACADEMIC_STAFF: 'bg-[#C4A882]/30 text-[#C4A882]',
+  ACADEMIC_STAFF: 'bg-accent-gold/30 text-accent-gold',
   SENIOR_LEADERSHIP: 'bg-white/10 text-white/60',
   SYSTEM_ADMINISTRATOR: 'bg-white/25 text-white',
 };

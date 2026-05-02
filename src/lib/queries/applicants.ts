@@ -1,7 +1,39 @@
+import type { Prisma } from '@/generated/prisma/client';
 import { prisma } from '@/lib/db';
 import { buildWhereClause, type ApplicantFilterParams } from '@/lib/queries/applicant-filters';
 
 const PAGE_SIZE = 20;
+
+const applicantDetailInclude = {
+  programme: true,
+  diocese: true,
+  admissionsYear: true,
+  ecclesialProfile: { include: { diocese: true } },
+  bapStatus: true,
+  offer: true,
+  registration: true,
+  accommodationRequest: true,
+  documents: { include: { documentType: true } },
+  interviews: {
+    include: {
+      createdBy: true,
+      updatedBy: true,
+      invitationSentBy: { select: { id: true, name: true } },
+      panelMembers: {
+        include: { user: { select: { id: true, name: true, email: true } } },
+      },
+    },
+    orderBy: { createdAt: 'desc' },
+  },
+  auditLogs: {
+    include: { user: { select: { id: true, name: true } } },
+    orderBy: { performedAt: 'desc' },
+  },
+} satisfies Prisma.ApplicantInclude;
+
+export type ApplicantDetail = Prisma.ApplicantGetPayload<{
+  include: typeof applicantDetailInclude;
+}>;
 
 export interface ApplicantListFilters extends ApplicantFilterParams {
   page?: number;
@@ -49,32 +81,7 @@ export async function getApplicantList(filters: ApplicantListFilters) {
 export async function getApplicantById(id: string) {
   return prisma.applicant.findUnique({
     where: { id },
-    include: {
-      programme: true,
-      diocese: true,
-      admissionsYear: true,
-      ecclesialProfile: { include: { diocese: true } },
-      bapStatus: true,
-      offer: true,
-      registration: true,
-      accommodationRequest: true,
-      documents: { include: { documentType: true } },
-      interviews: {
-        include: {
-          createdBy: true,
-          updatedBy: true,
-          invitationSentBy: { select: { id: true, name: true } },
-          panelMembers: {
-            include: { user: { select: { id: true, name: true, email: true } } },
-          },
-        },
-        orderBy: { createdAt: 'desc' },
-      },
-      auditLogs: {
-        include: { user: { select: { id: true, name: true } } },
-        orderBy: { performedAt: 'desc' },
-      },
-    },
+    include: applicantDetailInclude,
   });
 }
 

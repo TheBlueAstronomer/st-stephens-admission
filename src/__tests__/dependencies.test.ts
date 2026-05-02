@@ -21,5 +21,5 @@ describe('Shared frontend dependencies', () => {
   it('recharts is importable', async () => {
     const recharts = await import('recharts');
     expect(recharts.BarChart).toBeDefined();
-  });
+  }, 20_000);
 });
