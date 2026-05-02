@@ -216,7 +216,7 @@ model Applicant {
   // One-to-many
   documents  ApplicantDocument[]
   interviews Interview[]
-  auditLogs  AuditLog[]
+  auditLogs  AuditLog[] @relation("ApplicantAuditLogs")
 }
 
 /// PRD §6.2 — Church-related applicant information.
@@ -378,6 +378,7 @@ model AccommodationRequest {
 /// PRD §6.11 — Records important changes to applicant records.
 model AuditLog {
   id              String      @id @default(cuid())
+  applicantId     String?
   entityType      String
   entityId        String
   action          AuditAction
@@ -386,8 +387,8 @@ model AuditLog {
   performedByUserId String?
   performedAt     DateTime    @default(now())
 
-  performedBy Applicant? @relation(fields: [entityId], references: [id], onDelete: Cascade)
-  user        User?      @relation(fields: [performedByUserId], references: [id])
+  applicant Applicant? @relation("ApplicantAuditLogs", fields: [applicantId], references: [id], onDelete: Cascade)
+  user      User?      @relation(fields: [performedByUserId], references: [id])
 }
 
 /// Reference data — Diocese.

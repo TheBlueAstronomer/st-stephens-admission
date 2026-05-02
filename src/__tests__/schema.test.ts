@@ -262,8 +262,9 @@ describe('US-01: Prisma Schema Models — field shapes via create input types', 
 
   it('AuditLog has entityType, entityId, action, previous/new values', () => {
     const input: Prisma.AuditLogCreateInput = {
+      applicant: { connect: { id: 'applicant-1' } },
       entityType: 'Applicant',
-      id: 'cuid123',
+      entityId: 'cuid123',
       action: 'STATUS_CHANGE',
       previousValue: 'ENQUIRY',
       newValue: 'VISIT_INVITED',

@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
+import { serializeAuditFields, serializeAuditScalar } from '@/lib/audit-log';
 import { requireRole } from '@/lib/require-role';
 import {
   scheduleInterviewSchema,
@@ -37,9 +38,7 @@ export async function scheduleInterview(
   if (!parsed.success) {
     return {
       success: false,
-      error: parsed.error.flatten().fieldErrors
-        ? Object.values(parsed.error.flatten().fieldErrors).flat().join('; ')
-        : 'Validation failed.',
+      error: Object.values(parsed.error.flatten().fieldErrors).flat().join('; ') || 'Validation failed.',
     };
   }
 
@@ -119,15 +118,16 @@ export async function scheduleInterview(
     // Audit log — interview scheduled
     await tx.auditLog.create({
       data: {
+        applicantId: data.applicantId,
         entityType: 'Interview',
-        entityId: data.applicantId,
+        entityId: newInterview.id,
         action: 'INTERVIEW_SCHEDULED',
-        newValue: JSON.stringify({
+        newValue: serializeAuditFields('Scheduled interview', {
           interviewId: newInterview.id,
           interviewType: data.interviewType,
           scheduledAt: data.scheduledAt,
-          interviewerIds: data.interviewerIds,
-        }),
+          interviewerCount: data.interviewerIds.length,
+        }, { type: 'Interview', id: newInterview.id }),
         performedByUserId: session?.user?.id ?? null,
       },
     });
@@ -155,9 +155,7 @@ export async function recordInterviewOutcome(
   if (!parsed.success) {
     return {
       success: false,
-      error: parsed.error.flatten().fieldErrors
-        ? Object.values(parsed.error.flatten().fieldErrors).flat().join('; ')
-        : 'Validation failed.',
+      error: Object.values(parsed.error.flatten().fieldErrors).flat().join('; ') || 'Validation failed.',
     };
   }
 
@@ -224,15 +222,16 @@ export async function recordInterviewOutcome(
     // Audit log
     await tx.auditLog.create({
       data: {
+        applicantId: interview.applicant.id,
         entityType: 'Interview',
-        entityId: interview.applicant.id,
+        entityId: interview.id,
         action: 'INTERVIEW_OUTCOME',
-        previousValue: interview.status,
-        newValue: JSON.stringify({
+        previousValue: serializeAuditScalar('status', interview.status),
+        newValue: serializeAuditFields('Recorded interview outcome', {
           outcome: data.outcome,
           notes: data.notes,
           followUpActions: data.followUpActions,
-        }),
+        }, { type: 'Interview', id: interview.id }),
         performedByUserId: userId,
       },
     });
@@ -329,14 +328,15 @@ export async function markInvitationSent(
 
     await tx.auditLog.create({
       data: {
+        applicantId: interview.applicant.id,
         entityType: 'Interview',
-        entityId: interview.applicant.id,
+        entityId: interviewId,
         action: 'INVITATION_SENT',
-        newValue: JSON.stringify({
+        newValue: serializeAuditFields('Marked invitation as sent', {
           interviewId,
           sentAt: new Date().toISOString(),
           sentByUserId: session?.user?.id,
-        }),
+        }, { type: 'Interview', id: interviewId }),
         performedByUserId: session?.user?.id ?? null,
       },
     });
@@ -383,13 +383,14 @@ export async function markApplicationReceived(
 
     await tx.auditLog.create({
       data: {
+        applicantId: interview.applicant.id,
         entityType: 'Interview',
-        entityId: interview.applicant.id,
+        entityId: interviewId,
         action: 'APPLICATION_RECEIVED',
-        newValue: JSON.stringify({
+        newValue: serializeAuditFields('Marked interview application as received', {
           interviewId,
           receivedAt: new Date().toISOString(),
-        }),
+        }, { type: 'Interview', id: interviewId }),
         performedByUserId: session?.user?.id ?? null,
       },
     });

@@ -3,8 +3,18 @@
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/db';
 import { auth } from '@/lib/auth';
+import { serializeAuditFields, serializeAuditScalar } from '@/lib/audit-log';
 import { requireRole } from '@/lib/require-role';
-import { createApplicantSchema, type CreateApplicantInput } from '@/lib/validations/applicant';
+import {
+  createApplicantSchema,
+  updateApplicantBapSchema,
+  updateApplicantDetailsSchema,
+  updateApplicantEcclesialSchema,
+  type CreateApplicantInput,
+  type UpdateApplicantBapInput,
+  type UpdateApplicantDetailsInput,
+  type UpdateApplicantEcclesialInput,
+} from '@/lib/validations/applicant';
 import { generateApplicantId } from '@/lib/services/applicant-id';
 import { validateBAPGate } from '@/lib/business-rules/bap-gate';
 import {
@@ -14,7 +24,7 @@ import {
 } from '@/lib/business-rules/status-transitions';
 import { validateInterviewGate } from '@/lib/business-rules/interview-gate';
 import { buildWhereClause } from '@/lib/queries/applicant-filters';
-import type { ApplicantStatus, BAPStageStatus } from '@/generated/prisma/client';
+import type { ApplicantStatus, BAPStageStatus, Prisma } from '@/generated/prisma/client';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -23,6 +33,62 @@ export interface ActionResult<T = void> {
   data?: T;
   error?: string;
   warning?: string;
+}
+
+type AuditFieldChange = {
+  field: string;
+  previousValue: unknown;
+  newValue: unknown;
+};
+
+function getValidationErrorMessage(error: { flatten: () => { fieldErrors: Record<string, string[] | undefined> } }) {
+  return Object.values(error.flatten().fieldErrors).flat().filter(Boolean).join('; ') || 'Validation failed.';
+}
+
+function toOptionalString(value: string | undefined) {
+  return value && value.length > 0 ? value : null;
+}
+
+function toOptionalDate(value: string | undefined) {
+  return value && value.length > 0 ? new Date(value) : null;
+}
+
+function buildAuditFieldChanges(current: Record<string, unknown>, next: Record<string, unknown>) {
+  return Object.entries(next).reduce<AuditFieldChange[]>((changes, [field, newValue]) => {
+    const previousValue = current[field];
+    const normalizedPrevious = previousValue instanceof Date ? previousValue.toISOString() : previousValue;
+    const normalizedNext = newValue instanceof Date ? newValue.toISOString() : newValue;
+
+    if (normalizedPrevious === normalizedNext) {
+      return changes;
+    }
+
+    changes.push({ field, previousValue: normalizedPrevious, newValue: normalizedNext });
+    return changes;
+  }, []);
+}
+
+async function createApplicantFieldAuditLogs(
+  tx: Prisma.TransactionClient,
+  applicantId: string,
+  changes: AuditFieldChange[],
+  performedByUserId: string | null | undefined,
+  entityType: 'Applicant' | 'EcclesialProfile' | 'BAPStatus',
+  entityId: string,
+) {
+  for (const change of changes) {
+    await tx.auditLog.create({
+      data: {
+        applicantId,
+        entityType,
+        entityId,
+        action: 'UPDATE',
+        previousValue: serializeAuditScalar(change.field, change.previousValue),
+        newValue: serializeAuditScalar(change.field, change.newValue),
+        performedByUserId: performedByUserId ?? null,
+      },
+    });
+  }
 }
 
 // ─── Create Applicant ───────────────────────────────────────────────────────
@@ -38,9 +104,7 @@ export async function createApplicant(
   if (!parsed.success) {
     return {
       success: false,
-      error: parsed.error.flatten().fieldErrors
-        ? Object.values(parsed.error.flatten().fieldErrors).flat().join('; ')
-        : 'Validation failed.',
+      error: getValidationErrorMessage(parsed.error),
     };
   }
 
@@ -115,15 +179,16 @@ export async function createApplicant(
     // Audit log
     await tx.auditLog.create({
       data: {
+        applicantId: newApplicant.id,
         entityType: 'Applicant',
         entityId: newApplicant.id,
         action: 'CREATE',
-        newValue: JSON.stringify({
+        newValue: serializeAuditFields('Created applicant record', {
           applicantId,
           legalName: data.legalName,
           email: data.email,
           status: 'ENQUIRY',
-        }),
+        }, { type: 'Applicant', id: newApplicant.id }),
         performedByUserId: session?.user?.id ?? null,
       },
     });
@@ -187,6 +252,20 @@ export async function updateApplicantStatus(
     // If exception is being newly recorded, update the applicant and log it
     if (bapException?.hasException && bapException?.reason) {
       await prisma.$transaction(async (tx) => {
+        await tx.bAPStatus.upsert({
+          where: { applicantId },
+          update: {
+            hasStageOneBAPException: true,
+            stageOneBAPExceptionReason: bapException.reason,
+          },
+          create: {
+            applicantId,
+            hasStageOneBAPException: true,
+            stageOneBAPExceptionReason: bapException.reason,
+            stageOneStatus: applicant.bapStatus?.stageOneStatus ?? 'INCOMPLETE',
+            stageTwoStatus: applicant.bapStatus?.stageTwoStatus ?? 'INCOMPLETE',
+          },
+        });
         await tx.applicant.update({
           where: { id: applicantId },
           data: {
@@ -196,13 +275,17 @@ export async function updateApplicantStatus(
         });
         await tx.auditLog.create({
           data: {
+            applicantId,
             entityType: 'Applicant',
             entityId: applicantId,
             action: 'UPDATE',
-            previousValue: JSON.stringify({ hasStageOneBAPException: false }),
-            newValue: JSON.stringify({
+            previousValue: serializeAuditFields('Updated applicant BAP exception', {
+              hasStageOneBAPException: false,
+              stageOneBAPExceptionReason: null,
+            }),
+            newValue: serializeAuditFields('Updated applicant BAP exception', {
               hasStageOneBAPException: true,
-              reason: bapException.reason,
+              stageOneBAPExceptionReason: bapException.reason,
             }),
             performedByUserId: session?.user?.id ?? null,
           },
@@ -233,11 +316,12 @@ export async function updateApplicantStatus(
 
     await tx.auditLog.create({
       data: {
+        applicantId,
         entityType: 'Applicant',
         entityId: applicantId,
         action: 'STATUS_CHANGE',
-        previousValue: applicant.status,
-        newValue: targetStatus,
+        previousValue: serializeAuditScalar('status', applicant.status),
+        newValue: serializeAuditScalar('status', targetStatus),
         performedByUserId: session?.user?.id ?? null,
       },
     });
@@ -249,14 +333,20 @@ export async function updateApplicantStatus(
   return { success: true };
 }
 
-// ─── Update Applicant Fields ────────────────────────────────────────────────
+// ─── Update Applicant Details ───────────────────────────────────────────────
 
-export async function updateApplicant(
-  id: string,
-  updates: Record<string, unknown>,
+export async function updateApplicantDetails(
+  input: UpdateApplicantDetailsInput,
 ): Promise<ActionResult> {
   await requireRole('ADMISSIONS_STAFF', 'SYSTEM_ADMINISTRATOR');
   const session = await auth();
+ 
+  const parsed = updateApplicantDetailsSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, error: getValidationErrorMessage(parsed.error) };
+  }
+ 
+  const { id, ...data } = parsed.data;
 
   const applicant = await prisma.applicant.findUnique({
     where: { id },
@@ -266,43 +356,188 @@ export async function updateApplicant(
     return { success: false, error: 'Applicant not found.' };
   }
 
-  // Build audit log entries for changed fields
-  const auditEntries: { field: string; previousValue: string; newValue: string }[] = [];
-
-  for (const [key, newVal] of Object.entries(updates)) {
-    const oldVal = (applicant as Record<string, unknown>)[key];
-    if (oldVal !== newVal) {
-      auditEntries.push({
-        field: key,
-        previousValue: String(oldVal ?? ''),
-        newValue: String(newVal ?? ''),
-      });
-    }
-  }
+  const nextApplicantData = {
+    legalName: data.legalName,
+    preferredName: toOptionalString(data.preferredName),
+    dateOfBirth: toOptionalDate(data.dateOfBirth),
+    email: data.email,
+    phone: toOptionalString(data.phone),
+    addressLineOne: toOptionalString(data.addressLineOne),
+    addressLineTwo: toOptionalString(data.addressLineTwo),
+    city: toOptionalString(data.city),
+    postcode: toOptionalString(data.postcode),
+    country: toOptionalString(data.country),
+    dioceseId: toOptionalString(data.dioceseId),
+    programmeId: data.programmeId,
+    admissionsYearId: data.admissionsYearId,
+  };
+ 
+  const auditEntries = buildAuditFieldChanges(applicant as Record<string, unknown>, nextApplicantData);
 
   await prisma.$transaction(async (tx) => {
     await tx.applicant.update({
       where: { id },
-      data: updates as Parameters<typeof tx.applicant.update>[0]['data'],
+      data: nextApplicantData,
     });
 
-    for (const entry of auditEntries) {
-      await tx.auditLog.create({
-        data: {
-          entityType: 'Applicant',
-          entityId: id,
-          action: 'UPDATE',
-          previousValue: `${entry.field}: ${entry.previousValue}`,
-          newValue: `${entry.field}: ${entry.newValue}`,
-          performedByUserId: session?.user?.id ?? null,
-        },
-      });
-    }
+    await createApplicantFieldAuditLogs(
+      tx,
+      id,
+      auditEntries,
+      session?.user?.id,
+      'Applicant',
+      id,
+    );
   });
 
   revalidatePath(`/applicants/${id}`);
   revalidatePath('/applicants');
 
+  return { success: true };
+}
+
+// ─── Update Applicant Ecclesial Data ────────────────────────────────────────
+
+export async function updateApplicantEcclesial(
+  input: UpdateApplicantEcclesialInput,
+): Promise<ActionResult> {
+  await requireRole('ADMISSIONS_STAFF', 'SYSTEM_ADMINISTRATOR');
+  const session = await auth();
+ 
+  const parsed = updateApplicantEcclesialSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, error: getValidationErrorMessage(parsed.error) };
+  }
+ 
+  const { id, ...data } = parsed.data;
+  const applicant = await prisma.applicant.findUnique({
+    where: { id },
+    include: { ecclesialProfile: true },
+  });
+ 
+  if (!applicant) {
+    return { success: false, error: 'Applicant not found.' };
+  }
+ 
+  const nextEcclesialData = {
+    dioceseId: toOptionalString(data.dioceseId),
+    directorOfOrdinandsName: toOptionalString(data.directorOfOrdinandsName),
+    directorOfOrdinandsEmail: toOptionalString(data.directorOfOrdinandsEmail),
+    directorOfOrdinandsPhone: toOptionalString(data.directorOfOrdinandsPhone),
+  };
+ 
+  const currentEcclesialData = applicant.ecclesialProfile ?? {
+    dioceseId: null,
+    directorOfOrdinandsName: null,
+    directorOfOrdinandsEmail: null,
+    directorOfOrdinandsPhone: null,
+  };
+ 
+  const auditEntries = buildAuditFieldChanges(
+    currentEcclesialData as Record<string, unknown>,
+    nextEcclesialData,
+  );
+ 
+  await prisma.$transaction(async (tx) => {
+    const profile = await tx.ecclesialProfile.upsert({
+      where: { applicantId: id },
+      update: nextEcclesialData,
+      create: {
+        applicantId: id,
+        ...nextEcclesialData,
+      },
+    });
+ 
+    await createApplicantFieldAuditLogs(
+      tx,
+      id,
+      auditEntries,
+      session?.user?.id,
+      'EcclesialProfile',
+      profile.id,
+    );
+  });
+ 
+  revalidatePath(`/applicants/${id}`);
+  revalidatePath('/applicants');
+ 
+  return { success: true };
+}
+
+// ─── Update Applicant BAP Data ──────────────────────────────────────────────
+
+export async function updateApplicantBap(
+  input: UpdateApplicantBapInput,
+): Promise<ActionResult> {
+  await requireRole('ADMISSIONS_STAFF', 'SYSTEM_ADMINISTRATOR');
+  const session = await auth();
+ 
+  const parsed = updateApplicantBapSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, error: getValidationErrorMessage(parsed.error) };
+  }
+ 
+  const { id, stageOneStatus, stageOneDate, hasStageOneBAPException, stageOneBAPExceptionReason } = parsed.data;
+  const applicant = await prisma.applicant.findUnique({
+    where: { id },
+    include: { bapStatus: true },
+  });
+ 
+  if (!applicant) {
+    return { success: false, error: 'Applicant not found.' };
+  }
+ 
+  const nextBapData = {
+    stageOneStatus,
+    stageOneDate: toOptionalDate(stageOneDate),
+    hasStageOneBAPException: hasStageOneBAPException ?? false,
+    stageOneBAPExceptionReason: toOptionalString(stageOneBAPExceptionReason),
+  };
+ 
+  const currentBapData = applicant.bapStatus ?? {
+    stageOneStatus: 'INCOMPLETE',
+    stageOneDate: null,
+    hasStageOneBAPException: false,
+    stageOneBAPExceptionReason: null,
+  };
+ 
+  const auditEntries = buildAuditFieldChanges(
+    currentBapData as Record<string, unknown>,
+    nextBapData,
+  );
+ 
+  await prisma.$transaction(async (tx) => {
+    await tx.applicant.update({
+      where: { id },
+      data: {
+        hasStageOneBAPException: nextBapData.hasStageOneBAPException,
+        stageOneBAPExceptionReason: nextBapData.stageOneBAPExceptionReason,
+      },
+    });
+
+    const bapStatus = await tx.bAPStatus.upsert({
+      where: { applicantId: id },
+      update: nextBapData,
+      create: {
+        applicantId: id,
+        stageTwoStatus: 'INCOMPLETE',
+        ...nextBapData,
+      },
+    });
+ 
+    await createApplicantFieldAuditLogs(
+      tx,
+      id,
+      auditEntries,
+      session?.user?.id,
+      'BAPStatus',
+      bapStatus.id,
+    );
+  });
+ 
+  revalidatePath(`/applicants/${id}`);
+  revalidatePath('/applicants');
+ 
   return { success: true };
 }
 

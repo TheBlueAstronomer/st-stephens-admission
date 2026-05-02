@@ -30,6 +30,7 @@ import { VALID_TRANSITIONS } from '@/lib/business-rules/status-transitions';
 import { updateApplicantStatus } from '@/app/(staff)/applicants/actions';
 import { markInvitationSent, markApplicationReceived } from '@/app/(staff)/interviews/actions';
 import { ScheduleInterviewDialog } from '@/components/schedule-interview-dialog';
+import { formatAuditValue } from '@/lib/audit-log';
 import type { ApplicantStatus, AuditAction } from '@/generated/prisma/client';
 import { toast } from 'sonner';
 
@@ -562,11 +563,11 @@ function TimelineTab({ applicant }: { applicant: ApplicantFull }) {
             <span className="text-muted-foreground">{formatAction(log.action)}</span>
             {log.previousValue && log.newValue && (
               <span className="text-muted-foreground">
-                : {log.previousValue} <ArrowRightIcon size={12} weight="light" className="inline" /> {log.newValue}
+                : {formatAuditValue(log.previousValue)} <ArrowRightIcon size={12} weight="light" className="inline" /> {formatAuditValue(log.newValue)}
               </span>
             )}
             {!log.previousValue && log.newValue && (
-              <span className="text-muted-foreground">: {log.newValue}</span>
+              <span className="text-muted-foreground">: {formatAuditValue(log.newValue)}</span>
             )}
           </div>
         </div>

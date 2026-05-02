@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { createApplicantSchema } from '@/lib/validations/applicant';
+import {
+  createApplicantSchema,
+  updateApplicantBapSchema,
+  updateApplicantDetailsSchema,
+  updateApplicantEcclesialSchema,
+} from '@/lib/validations/applicant';
 
 describe('createApplicantSchema', () => {
   const validInput = {
@@ -105,5 +110,74 @@ describe('createApplicantSchema', () => {
       });
       expect(result.success, `${status} should be valid`).toBe(true);
     }
+  });
+});
+
+describe('updateApplicantDetailsSchema', () => {
+  const validInput = {
+    id: 'applicant-1',
+    legalName: 'James Smith',
+    preferredName: 'Jim',
+    dateOfBirth: '1990-01-15',
+    email: 'james@example.com',
+    phone: '+44 7700 900000',
+    addressLineOne: '10 Downing Street',
+    addressLineTwo: 'Flat 2',
+    city: 'London',
+    postcode: 'SW1A 2AA',
+    country: 'United Kingdom',
+    dioceseId: 'diocese-1',
+    programmeId: 'prog-1',
+    admissionsYearId: 'year-1',
+  };
+
+  it('accepts valid typed applicant details input', () => {
+    const result = updateApplicantDetailsSchema.safeParse(validInput);
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects missing applicant id', () => {
+    const result = updateApplicantDetailsSchema.safeParse({
+      ...validInput,
+      id: '',
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe('updateApplicantEcclesialSchema', () => {
+  it('accepts valid ecclesial update input', () => {
+    const result = updateApplicantEcclesialSchema.safeParse({
+      id: 'applicant-1',
+      dioceseId: 'diocese-1',
+      directorOfOrdinandsName: 'Rev. John Doe',
+      directorOfOrdinandsEmail: 'john@diocese.org',
+      directorOfOrdinandsPhone: '+44 1234 567890',
+    });
+    expect(result.success).toBe(true);
+  });
+});
+
+describe('updateApplicantBapSchema', () => {
+  const validInput = {
+    id: 'applicant-1',
+    stageOneStatus: 'COMPLETED',
+    stageOneDate: '2025-03-01',
+    hasStageOneBAPException: false,
+    stageOneBAPExceptionReason: '',
+  };
+
+  it('accepts valid BAP update input', () => {
+    const result = updateApplicantBapSchema.safeParse(validInput);
+    expect(result.success).toBe(true);
+  });
+
+  it('rejects exception without reason', () => {
+    const result = updateApplicantBapSchema.safeParse({
+      ...validInput,
+      hasStageOneBAPException: true,
+      stageOneBAPExceptionReason: '',
+    });
+    expect(result.success).toBe(false);
   });
 });
