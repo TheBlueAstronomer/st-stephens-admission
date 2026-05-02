@@ -245,8 +245,8 @@ export function ApplicantDetailView({ applicant, canEdit, availableInterviewers 
               <TabsContent value="ecclesial"><EcclesialTab applicant={applicant} /></TabsContent>
               <TabsContent value="bap"><BAPTab applicant={applicant} /></TabsContent>
               <TabsContent value="interview"><InterviewTab applicant={applicant} canEdit={canEdit} availableInterviewers={availableInterviewers} /></TabsContent>
-              <TabsContent value="offer"><OfferTab applicant={applicant} /></TabsContent>
-              <TabsContent value="registration"><RegistrationTab applicant={applicant} /></TabsContent>
+              <TabsContent value="offer"><OfferTab applicant={applicant} canEdit={canEdit} /></TabsContent>
+              <TabsContent value="registration"><RegistrationTab applicant={applicant} canEdit={canEdit} /></TabsContent>
               <TabsContent value="documents"><DocumentsTab applicant={applicant} /></TabsContent>
               <TabsContent value="notes"><NotesTab /></TabsContent>
               <TabsContent value="timeline"><TimelineTab applicant={applicant} /></TabsContent>

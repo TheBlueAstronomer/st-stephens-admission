@@ -162,6 +162,26 @@ async function main() {
       programme: 'BA in Theology',
       bapStageOne: 'INCOMPLETE' as const,
     },
+    {
+      applicantId: 'SSH-2025-0007',
+      legalName: 'Rachel Green',
+      preferredName: 'Rach',
+      email: 'rachel.g@example.com',
+      status: 'INTERVIEW_COMPLETED' as const,
+      diocese: 'Oxford',
+      programme: 'MA in Applied Theology',
+      bapStageOne: 'COMPLETED' as const,
+    },
+    {
+      applicantId: 'SSH-2025-0008',
+      legalName: 'Thomas Hughes',
+      preferredName: 'Tom',
+      email: 'thomas.h@example.com',
+      status: 'UNCONDITIONAL_OFFER' as const,
+      diocese: 'London',
+      programme: 'BA in Theology',
+      bapStageOne: 'COMPLETED' as const,
+    },
   ];
 
   for (const a of sampleApplicants) {
@@ -239,6 +259,62 @@ async function main() {
       console.log(`  ✓ Interview for ${michaelApplicant.applicantId} — Visit-Interview on 20 Jul 2025, panel: Bob Academic`);
     } else {
       console.log(`  ⊘ Interview for ${michaelApplicant.applicantId} already exists, skipping`);
+    }
+  }
+
+  // ─── F04 E2E: Completed interview for Rachel Green ──────────────────────
+
+  const rachelApplicant = await prisma.applicant.findFirst({
+    where: { applicantId: 'SSH-2025-0007' },
+  });
+
+  if (rachelApplicant && aliceUser) {
+    const existingRachelInterview = await prisma.interview.findFirst({
+      where: { applicantId: rachelApplicant.id },
+    });
+
+    if (!existingRachelInterview) {
+      await prisma.interview.create({
+        data: {
+          applicantId: rachelApplicant.id,
+          interviewType: 'VISIT_INTERVIEW',
+          scheduledAt: new Date('2025-06-10T14:00:00Z'),
+          status: 'COMPLETED',
+          outcome: 'RECOMMENDED',
+          notes: 'Strong candidate, recommended for unconditional offer.',
+          createdByUserId: aliceUser.id,
+        },
+      });
+      console.log(`  ✓ Completed interview for ${rachelApplicant.applicantId} — Rachel Green`);
+    } else {
+      console.log(`  ⊘ Interview for ${rachelApplicant.applicantId} already exists, skipping`);
+    }
+  }
+
+  // ─── F04 UI Demo: Unaccepted offer for Thomas Hughes ────────────────────
+
+  const thomasApplicant = await prisma.applicant.findFirst({
+    where: { applicantId: 'SSH-2025-0008' },
+  });
+
+  if (thomasApplicant) {
+    const existingOffer = await prisma.offer.findFirst({
+      where: { applicantId: thomasApplicant.id },
+    });
+
+    if (!existingOffer) {
+      await prisma.offer.create({
+        data: {
+          applicantId: thomasApplicant.id,
+          offerType: 'UNCONDITIONAL',
+          decisionDate: new Date('2026-04-15'),
+          conditions: [],
+          decisionNotes: 'Strong candidate across all areas. Recommended unanimously by panel.',
+        },
+      });
+      console.log(`  ✓ Unaccepted unconditional offer created for ${thomasApplicant.applicantId} — Thomas Hughes`);
+    } else {
+      console.log(`  ⊘ Offer for ${thomasApplicant.applicantId} already exists, skipping`);
     }
   }
 

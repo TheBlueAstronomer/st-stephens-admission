@@ -79,11 +79,12 @@ export function ApplicantTable({
                 (d) => d.isRequired && d.isReceived,
               ).length;
               const nextInterview = applicant.interviews[0];
+              const isInactive = applicant.status === 'DECLINED' || applicant.status === 'WITHDRAWN';
 
               return (
                 <tr
                   key={applicant.id}
-                  className="cursor-pointer border-b border-black/4 transition-all duration-150 hover:bg-brand-ink/2"
+                  className={`cursor-pointer border-b border-black/4 transition-all duration-150 hover:bg-brand-ink/2 ${isInactive ? 'opacity-50' : ''}`}
                   style={{
                     animation: `fadeInUp 300ms ${idx * 30}ms both`,
                   }}
@@ -93,7 +94,7 @@ export function ApplicantTable({
                       href={`/applicants/${applicant.id}`}
                       className="block"
                     >
-                      <div className="font-medium text-brand-ink">
+                      <div className={`font-medium ${isInactive ? 'text-muted-foreground line-through' : 'text-brand-ink'}`}>
                         {applicant.legalName}
                       </div>
                       <div className="text-xs text-muted-foreground">

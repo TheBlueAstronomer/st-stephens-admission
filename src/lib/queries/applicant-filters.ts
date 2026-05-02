@@ -8,6 +8,25 @@ export interface ApplicantFilterParams {
 }
 
 /**
+ * Statuses that are considered inactive / terminal and should be excluded
+ * from active registration and pipeline workflows (US-10).
+ */
+export const INACTIVE_STATUSES = ['DECLINED', 'WITHDRAWN'] as const;
+
+/**
+ * Build a where clause that excludes DECLINED and WITHDRAWN applicants.
+ * Use for registration lists, confirmation candidates, and active pipeline queries.
+ */
+export function buildActiveRegistrationWhereClause(filters: ApplicantFilterParams) {
+  const base = buildWhereClause(filters);
+  // Override status filter: exclude DECLINED / WITHDRAWN unless caller explicitly filtered
+  if (!filters.status) {
+    (base as Record<string, unknown>).status = { notIn: INACTIVE_STATUSES };
+  }
+  return base;
+}
+
+/**
  * Build Prisma where clause from applicant list filter params.
  */
 export function buildWhereClause(filters: ApplicantFilterParams) {

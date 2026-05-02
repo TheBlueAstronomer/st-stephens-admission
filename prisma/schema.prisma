@@ -108,6 +108,9 @@ enum AuditAction {
   INTERVIEW_SCHEDULED
   INVITATION_SENT
   APPLICATION_RECEIVED
+  OFFER_CREATED
+  OFFER_ACCEPTED
+  REGISTRATION_RECEIVED
   CONFIRMED_ORDINAND
 }
 
@@ -193,6 +196,8 @@ model Applicant {
   status                    ApplicantStatus @default(ENQUIRY)
   hasStageOneBAPException   Boolean         @default(false)
   stageOneBAPExceptionReason String?
+  registrationFormReceivedAt DateTime?
+  confirmedOrdinandAt        DateTime?
   createdAt                 DateTime        @default(now())
   updatedAt                 DateTime        @updatedAt
 
@@ -310,7 +315,7 @@ model Offer {
   applicantId   String    @unique
   offerType     OfferType
   decisionDate  DateTime?
-  conditions    String?
+  conditions    Json     @default("[]")
   acceptedAt    DateTime?
   declinedAt    DateTime?
   withdrawnAt   DateTime?

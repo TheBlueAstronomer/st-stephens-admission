@@ -17,9 +17,9 @@
 - **Test**: Call with `WITHDRAWN`; assert status is `WITHDRAWN`.
 
 ### Acceptance Criteria
-- [ ] An Offer record is created with the selected type, decision date, and notes.
-- [ ] The applicant status updates to the corresponding status.
-- [ ] An `AuditLog` entry is created for the offer decision.
+- [x] An Offer record is created with the selected type, decision date, and notes.
+- [x] The applicant status updates to the corresponding status.
+- [x] An `AuditLog` entry is created for the offer decision.
 
 ### Implementation Steps
 1. **Create a Zod schema** — `src/lib/validations/offer.ts` requiring `offerType` (enum: `CONDITIONAL`, `UNCONDITIONAL`, `DECLINED`, `WITHDRAWN`), `decisionDate`, and optional `decisionNotes`, `conditions` (array of strings).
@@ -51,9 +51,9 @@ Create `e2e/f04-offer-registration.spec.ts`:
 - **Test**: Call with type `UNCONDITIONAL` and no conditions; assert it succeeds (conditions not required for unconditional).
 
 ### Acceptance Criteria
-- [ ] Saving a conditional offer without at least one condition is blocked.
-- [ ] The validation error message is clear and specific.
-- [ ] Unconditional offers do not require conditions.
+- [x] Saving a conditional offer without at least one condition is blocked.
+- [x] The validation error message is clear and specific.
+- [x] Unconditional offers do not require conditions.
 
 ### Implementation Steps
 1. **Add Zod validation** — in the offer schema, use `.refine()` to require `conditions.length >= 1` when `offerType === 'CONDITIONAL'`.
@@ -74,8 +74,8 @@ Create `e2e/f04-offer-registration.spec.ts`:
 - **Test**: Assert the applicant is now eligible for registration status transitions.
 
 ### Acceptance Criteria
-- [ ] Acceptance date is recorded when an applicant accepts an offer.
-- [ ] An `AuditLog` entry is created for the acceptance event.
+- [x] Acceptance date is recorded when an applicant accepts an offer.
+- [x] An `AuditLog` entry is created for the acceptance event.
 
 ### Implementation Steps
 1. **Create the `acceptOffer` server action** — `requireRole('ADMISSIONS_STAFF')`. Update the `Offer` record: set `acceptedAt = new Date()`. Transition applicant to eligible for registration.
@@ -96,8 +96,8 @@ Create `e2e/f04-offer-registration.spec.ts`:
 - **Test**: Call with `WITHDRAWN` and a reason; assert the notes are stored.
 
 ### Acceptance Criteria
-- [ ] Declined and withdrawn offers can include a reason in `decisionNotes`.
-- [ ] The reason is visible on the applicant detail screen.
+- [x] Declined and withdrawn offers can include a reason in `decisionNotes`.
+- [x] The reason is visible on the applicant detail screen.
 
 ### Implementation Steps
 1. **Ensure `decisionNotes` is stored** — the `createOffer` action already persists `decisionNotes`. No additional action needed if the Zod schema includes it.
@@ -118,8 +118,8 @@ Create `e2e/f04-offer-registration.spec.ts`:
 - **Test**: Accept the offer first, then mark registration received; assert it succeeds.
 
 ### Acceptance Criteria
-- [ ] Moving to registration without an accepted offer is blocked server-side.
-- [ ] The error message clearly states an accepted offer is required.
+- [x] Moving to registration without an accepted offer is blocked server-side.
+- [x] The error message clearly states an accepted offer is required.
 
 ### Implementation Steps
 1. **Create `validateOfferGate()` utility** — `src/lib/business-rules/offer-gate.ts`. Accepts applicant ID, queries their offer. Returns `{ allowed: boolean, reason?: string }`.
@@ -141,9 +141,9 @@ Create `e2e/f04-offer-registration.spec.ts`:
 - **Test**: Call the mark-registration-received action for an applicant with an accepted offer; assert `registrationFormReceivedAt` is set and applicant status transitions to `REGISTRATION_FORM_RECEIVED`.
 
 ### Acceptance Criteria
-- [ ] Registration form received timestamp is recorded.
-- [ ] Applicant status transitions to `REGISTRATION_FORM_RECEIVED`.
-- [ ] An `AuditLog` entry is created.
+- [x] Registration form received timestamp is recorded.
+- [x] Applicant status transitions to `REGISTRATION_FORM_RECEIVED`.
+- [x] An `AuditLog` entry is created.
 
 ### Implementation Steps
 1. **Create the `markRegistrationReceived` server action** — `requireRole('ADMISSIONS_STAFF')`. Call `validateOfferGate()`, then update applicant: set `registrationFormReceivedAt = new Date()`, transition status to `REGISTRATION_FORM_RECEIVED`.
@@ -171,9 +171,9 @@ Add to `e2e/f04-offer-registration.spec.ts`:
 - **Test**: Assert the `AuditLog` records the confirmation.
 
 ### Acceptance Criteria
-- [ ] Applicant status transitions to `CONFIRMED_ORDINAND`.
-- [ ] Confirmation date is recorded.
-- [ ] An `AuditLog` entry is created.
+- [x] Applicant status transitions to `CONFIRMED_ORDINAND`.
+- [x] Confirmation date is recorded.
+- [x] An `AuditLog` entry is created.
 
 ### Implementation Steps
 1. **Create the `confirmOrdinand` server action** — `requireRole('ADMISSIONS_STAFF')`. Run all prerequisite checks:
@@ -200,9 +200,9 @@ Add to `e2e/f04-offer-registration.spec.ts`:
 - **Test**: Waive the document; attempt confirmation; assert it succeeds.
 
 ### Acceptance Criteria
-- [ ] Confirmation is blocked when mandatory documents are outstanding.
-- [ ] The error message lists the specific missing documents.
-- [ ] Waived documents satisfy the requirement.
+- [x] Confirmation is blocked when mandatory documents are outstanding.
+- [x] The error message lists the specific missing documents.
+- [x] Waived documents satisfy the requirement.
 
 ### Implementation Steps
 1. **Create `validateDocumentGate()` utility** — `src/lib/business-rules/document-gate.ts`. Accepts applicant ID, queries mandatory `ApplicantDocument` records. Returns `{ allowed: boolean, missingDocuments: string[] }`.
@@ -225,8 +225,8 @@ Add to `e2e/f04-offer-registration.spec.ts`:
 - **Test**: Mark registration received, then attempt confirmation; assert it succeeds (assuming other gates pass).
 
 ### Acceptance Criteria
-- [ ] Confirmation is blocked without a received registration form.
-- [ ] The error message clearly states the registration form is required.
+- [x] Confirmation is blocked without a received registration form.
+- [x] The error message clearly states the registration form is required.
 
 ### Implementation Steps
 1. **Add registration form check** in `confirmOrdinand` — at the top of the action, check `applicant.registrationFormReceivedAt`. If null, return error: "Registration form must be received before confirming as ordinand."
@@ -246,8 +246,8 @@ Add to `e2e/f04-offer-registration.spec.ts`:
 - **Test**: Query a report (e.g., pipeline report); assert they are included.
 
 ### Acceptance Criteria
-- [ ] Declined and withdrawn applicants appear in reports.
-- [ ] Declined and withdrawn applicants do not appear in active registration workflows.
+- [x] Declined and withdrawn applicants appear in reports.
+- [x] Declined and withdrawn applicants do not appear in active registration workflows.
 
 ### Implementation Steps
 1. **Filter active registration queries** — in all registration-related queries (registration list, confirmation candidates), add `where: { status: { notIn: ['DECLINED', 'WITHDRAWN'] } }`.

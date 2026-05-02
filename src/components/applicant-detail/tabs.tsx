@@ -5,18 +5,26 @@ import Link from 'next/link';
 import {
   ArrowRightIcon,
   CalendarBlankIcon,
+  CheckCircleIcon,
+  CheckSquareIcon,
   ClockCounterClockwiseIcon,
   FileTextIcon,
   GraduationCapIcon,
+  ListDashesIcon,
   PaperPlaneTiltIcon,
+  PencilSimpleIcon,
   ShieldCheckIcon,
+  TextAlignLeftIcon,
   UserCircleIcon,
+  WarningCircleIcon,
 } from '@phosphor-icons/react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Alert } from '@/components/ui/alert';
 import { ScheduleInterviewDialog } from '@/components/schedule-interview-dialog';
+import { RecordOfferSheet } from '@/components/record-offer-sheet';
 import { markApplicationReceived, markInvitationSent } from '@/app/(staff)/interviews/actions';
+import { acceptOffer, markRegistrationReceived, confirmOrdinand } from '@/app/(staff)/applicants/[id]/actions';
 import {
   DetailField,
   EmptyState,
@@ -28,6 +36,7 @@ import { formatAuditAction } from '@/components/applicant-detail/timeline';
 import { formatAuditValue } from '@/lib/audit-log';
 import { formatDate, formatDateTime, formatTime } from '@/lib/formatters/date';
 import { useActionExecutor } from '@/hooks/use-action-executor';
+import { STATUS_LABELS } from '@/lib/constants/applicant-status';
 
 function renderPanelMembers(interview: ApplicantInterview) {
   if (interview.panelMembers.length === 0) {
@@ -333,35 +342,295 @@ export function InterviewTab({
   );
 }
 
-export function OfferTab({ applicant }: { applicant: ApplicantFull }) {
-  if (!applicant.offer) {
+const OFFER_TYPE_LABELS: Record<string, string> = {
+  UNCONDITIONAL: 'Unconditional Offer',
+  CONDITIONAL: 'Conditional Offer',
+  DECLINED: 'Declined',
+  WITHDRAWN: 'Withdrawn',
+};
+
+const OFFER_TYPE_COLORS: Record<string, string> = {
+  UNCONDITIONAL: 'bg-green-100 text-green-800',
+  CONDITIONAL: 'bg-amber-100 text-amber-800',
+  DECLINED: 'bg-red-100 text-red-800',
+  WITHDRAWN: 'bg-gray-100 text-gray-600',
+};
+
+export function OfferTab({ applicant, canEdit }: { applicant: ApplicantFull; canEdit?: boolean }) {
+  const [offerSheetOpen, setOfferSheetOpen] = useState(false);
+  const { isPending, executeAction } = useActionExecutor();
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  const o = applicant.offer;
+  const isOfferPresent = !!o;
+  const isAccepted = !!o?.acceptedAt;
+  const canRecord = canEdit && !['DECLINED', 'WITHDRAWN', 'CONFIRMED_ORDINAND'].includes(applicant.status);
+  const canAccept = canEdit && isOfferPresent && !isAccepted && !['DECLINED', 'WITHDRAWN'].includes(o.offerType);
+
+  const handleAccept = () => {
+    setActionError(null);
+    executeAction({
+      action: () => acceptOffer({ applicantId: applicant.id }),
+      successMessage: 'Offer accepted successfully.',
+      refresh: true,
+      onError: (msg) => setActionError(msg),
+    });
+  };
+
+  if (!isOfferPresent && !canRecord) {
     return <EmptyState message="No offer decision recorded yet." />;
   }
-  const o = applicant.offer;
+
   return (
-    <dl className="grid grid-cols-2 gap-x-8 gap-y-4">
-      <DetailField label="Offer Type" value={o.offerType} />
-      <DetailField label="Decision Date" value={o.decisionDate ? formatDate(o.decisionDate) : null} />
-      <DetailField label="Conditions" value={o.conditions} />
-      <DetailField label="Decision Notes" value={o.decisionNotes} />
-    </dl>
+    <div className="space-y-4">
+      {actionError && (
+        <Alert variant="destructive" className="flex items-center gap-2">
+          <WarningCircleIcon size={16} />
+          <span className="text-sm">{actionError}</span>
+        </Alert>
+      )}
+
+      {!isOfferPresent && (
+        <>
+          <EmptyState message="No offer decision recorded yet." />
+          {canRecord && (
+            <div className="flex justify-center pt-2 pb-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-full"
+                onClick={() => setOfferSheetOpen(true)}
+              >
+                Record Offer Decision
+              </Button>
+            </div>
+          )}
+        </>
+      )}
+
+      {isOfferPresent && (
+        <div>
+          {/* Card header — offer type + acceptance status */}
+          <div className="flex items-start justify-between gap-4 pb-4">
+            <div className="flex items-center gap-3 flex-wrap">
+              <Badge className={`${OFFER_TYPE_COLORS[o.offerType] ?? 'bg-gray-100 text-gray-600'} border-0 text-sm font-medium px-3 py-1`}>
+                {OFFER_TYPE_LABELS[o.offerType] ?? o.offerType}
+              </Badge>
+              {isAccepted && (
+                <span className="flex items-center gap-1.5 text-sm text-green-700 font-medium">
+                  <CheckCircleIcon size={15} weight="fill" />
+                  Accepted {formatDate(o.acceptedAt!)}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Decision details */}
+          <div className="pb-5 border-b border-border">
+            <dl className="grid grid-cols-2 gap-x-8 gap-y-4">
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">Decision Date</dt>
+                <dd className="flex items-center gap-1.5 text-sm font-medium text-brand-ink">
+                  <CalendarBlankIcon size={14} className="text-muted-foreground shrink-0" />
+                  {o.decisionDate ? formatDate(o.decisionDate) : '—'}
+                </dd>
+              </div>
+              {isAccepted && (
+                <DetailField label="Accepted On" value={formatDate(o.acceptedAt!)} />
+              )}
+              {o.declinedAt && (
+                <DetailField label="Declined On" value={formatDate(o.declinedAt)} />
+              )}
+              {o.withdrawnAt && (
+                <DetailField label="Withdrawn On" value={formatDate(o.withdrawnAt)} />
+              )}
+            </dl>
+          </div>
+
+          {/* Conditions — only for CONDITIONAL */}
+          {o.offerType === 'CONDITIONAL' && (
+            <div className="py-4 border-b border-border">
+              <p className="flex items-center gap-2 text-sm font-semibold text-brand-ink mb-3">
+                <ListDashesIcon size={15} className="shrink-0" />
+                Conditions
+              </p>
+              {((o.conditions as string[]) ?? []).length === 0 ? (
+                <p className="text-sm text-muted-foreground">No conditions recorded.</p>
+              ) : (
+                <ul className="space-y-2">
+                  {(o.conditions as string[]).map((cond, idx) => (
+                    <li key={idx} className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2.5 text-sm">
+                      <span className="text-amber-600 mt-0.5 shrink-0">•</span>
+                      <span>{cond}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
+          {/* Acceptance section */}
+          {!isAccepted && !['DECLINED', 'WITHDRAWN'].includes(o.offerType) && (
+            <div className="py-4 border-b border-border">
+              <p className="flex items-center gap-2 text-sm font-semibold text-brand-ink mb-3">
+                <CheckSquareIcon size={15} className="shrink-0" />
+                Acceptance
+              </p>
+              <p className="text-sm text-muted-foreground">Status: Pending</p>
+            </div>
+          )}
+
+          {/* Notes / Reason */}
+          <div className="py-4 border-b border-border">
+            <p className="flex items-center gap-2 text-sm font-semibold text-brand-ink mb-2">
+              <TextAlignLeftIcon size={15} className="shrink-0" />
+              {o.offerType === 'DECLINED' || o.offerType === 'WITHDRAWN' ? 'Reason / Notes' : 'Decision Notes'}
+            </p>
+            <p className="text-sm text-muted-foreground">{o.decisionNotes ?? '—'}</p>
+          </div>
+
+          {/* Card footer — action buttons */}
+          {(canRecord || canAccept) && (
+            <div className="flex items-center gap-2 pt-4">
+              {canRecord && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full"
+                  onClick={() => setOfferSheetOpen(true)}
+                >
+                  <PencilSimpleIcon size={13} className="mr-1.5" />
+                  {isOfferPresent ? 'Edit Offer Decision' : 'Record Offer Decision'}
+                </Button>
+              )}
+              {canAccept && (
+                <Button
+                  size="sm"
+                  className="rounded-full bg-brand-ink text-white hover:bg-brand-ink/90"
+                  onClick={handleAccept}
+                  disabled={isPending}
+                >
+                  Mark as Accepted
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      <RecordOfferSheet
+        open={offerSheetOpen}
+        onOpenChange={setOfferSheetOpen}
+        applicantId={applicant.id}
+        applicantName={applicant.preferredName ?? applicant.legalName}
+        existingOffer={o ?? undefined}
+      />
+    </div>
   );
 }
 
-export function RegistrationTab({ applicant }: { applicant: ApplicantFull }) {
-  if (!applicant.registration) {
-    return <EmptyState message="No registration form received yet." />;
-  }
+export function RegistrationTab({ applicant, canEdit }: { applicant: ApplicantFull; canEdit?: boolean }) {
+  const { isPending, executeAction } = useActionExecutor();
+  const [actionError, setActionError] = useState<string | null>(null);
+
   const r = applicant.registration;
+  const hasAcceptedOffer = !!applicant.offer?.acceptedAt;
+  const regReceived = !!applicant.registrationFormReceivedAt;
+  const isConfirmed = applicant.status === 'CONFIRMED_ORDINAND';
+
+  const canMarkRegReceived = canEdit && hasAcceptedOffer && !regReceived && !isConfirmed;
+  const canConfirmOrdinand = canEdit && regReceived && !isConfirmed;
+
+  const handleMarkRegReceived = () => {
+    setActionError(null);
+    executeAction({
+      action: () => markRegistrationReceived(applicant.id),
+      successMessage: 'Registration form marked as received.',
+      refresh: true,
+      onError: (msg) => setActionError(msg),
+    });
+  };
+
+  const handleConfirmOrdinand = () => {
+    setActionError(null);
+    executeAction({
+      action: () => confirmOrdinand(applicant.id),
+      successMessage: `${applicant.preferredName ?? applicant.legalName} confirmed as ordinand.`,
+      refresh: true,
+      onError: (msg) => setActionError(msg),
+    });
+  };
+
+  if (!hasAcceptedOffer && !r) {
+    return (
+      <EmptyState message="Registration is available once the applicant has accepted their offer." />
+    );
+  }
+
   return (
-    <dl className="grid grid-cols-2 gap-x-8 gap-y-4">
-      <DetailField label="Form Received" value={r.registrationFormReceivedAt ? formatDate(r.registrationFormReceivedAt) : null} />
-      <DetailField label="Contact Confirmed" value={r.contactDetailsConfirmed ? 'Yes' : 'No'} />
-      <DetailField label="Programme Confirmed" value={r.programmeConfirmed ? 'Yes' : 'No'} />
-      <DetailField label="Bishop Confirmed" value={r.bishopDetailsConfirmed ? 'Yes' : 'No'} />
-      <DetailField label="Documents Submitted" value={r.areSupportingDocumentsSubmitted ? 'Yes' : 'No'} />
-      <DetailField label="Electronic Signature" value={r.electronicSignature ? 'Yes' : 'No'} />
-    </dl>
+    <div className="space-y-6">
+      {actionError && (
+        <Alert variant="destructive" className="flex items-center gap-2">
+          <WarningCircleIcon size={16} />
+          <span className="text-sm">{actionError}</span>
+        </Alert>
+      )}
+
+      {/* Confirmation banner */}
+      {isConfirmed && applicant.confirmedOrdinandAt && (
+        <div className="flex items-center gap-3 rounded-2xl border border-green-200 bg-green-50 px-4 py-3">
+          <CheckCircleIcon size={20} weight="fill" className="text-green-600 shrink-0" />
+          <div>
+            <p className="text-sm font-semibold text-green-800">Confirmed Ordinand</p>
+            <p className="text-xs text-green-700">Confirmed on {formatDate(applicant.confirmedOrdinandAt)}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Actions */}
+      {(canMarkRegReceived || canConfirmOrdinand) && (
+        <div className="flex items-center gap-2">
+          {canMarkRegReceived && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-full"
+              onClick={handleMarkRegReceived}
+              disabled={isPending}
+            >
+              Mark Registration Form Received
+            </Button>
+          )}
+          {canConfirmOrdinand && (
+            <Button
+              size="sm"
+              className="rounded-full bg-brand-ink text-white hover:bg-brand-ink/90"
+              onClick={handleConfirmOrdinand}
+              disabled={isPending}
+            >
+              Confirm as Ordinand
+            </Button>
+          )}
+        </div>
+      )}
+
+      {/* Registration status checklist */}
+      <dl className="grid grid-cols-2 gap-x-8 gap-y-4">
+        <DetailField
+          label="Registration Form Received"
+          value={regReceived ? formatDate(applicant.registrationFormReceivedAt!) : null}
+        />
+        {r && (
+          <>
+            <DetailField label="Contact Details Confirmed" value={r.contactDetailsConfirmed ? 'Yes' : 'No'} />
+            <DetailField label="Programme Confirmed" value={r.programmeConfirmed ? 'Yes' : 'No'} />
+            <DetailField label="Bishop Details Confirmed" value={r.bishopDetailsConfirmed ? 'Yes' : 'No'} />
+            <DetailField label="Supporting Documents Submitted" value={r.areSupportingDocumentsSubmitted ? 'Yes' : 'No'} />
+            <DetailField label="Electronic Signature" value={r.electronicSignature ? 'Yes' : 'No'} />
+          </>
+        )}
+      </dl>
+    </div>
   );
 }
 

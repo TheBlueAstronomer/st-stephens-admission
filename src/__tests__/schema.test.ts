@@ -123,7 +123,7 @@ describe('US-01: Prisma Schema Enums', () => {
     expect(Object.values(ModeOfStudy)).toHaveLength(3);
   });
 
-  it('AuditAction has 12 values', () => {
+  it('AuditAction has 15 values', () => {
     const expected = [
       'CREATE',
       'UPDATE',
@@ -137,9 +137,12 @@ describe('US-01: Prisma Schema Enums', () => {
       'INTERVIEW_SCHEDULED',
       'INVITATION_SENT',
       'APPLICATION_RECEIVED',
+      'OFFER_CREATED',
+      'OFFER_ACCEPTED',
+      'REGISTRATION_RECEIVED',
     ];
     expect(Object.values(AuditAction)).toEqual(expect.arrayContaining(expected));
-    expect(Object.values(AuditAction)).toHaveLength(12);
+    expect(Object.values(AuditAction)).toHaveLength(15);
   });
 });
 
@@ -218,7 +221,7 @@ describe('US-01: Prisma Schema Models — field shapes via create input types', 
     const input: Prisma.OfferCreateWithoutApplicantInput = {
       offerType: 'CONDITIONAL',
       decisionDate: new Date(),
-      conditions: 'Subject to Stage 2 BAP',
+      conditions: ['Subject to Stage 2 BAP'],
       decisionNotes: 'Approved by panel',
     };
     expect(input.offerType).toBe('CONDITIONAL');
@@ -330,7 +333,7 @@ describe('US-01: Prisma Schema Relationships', () => {
       offer: {
         create: {
           offerType: 'CONDITIONAL',
-          conditions: 'Stage 2 BAP completion',
+          conditions: ['Stage 2 BAP completion'],
         },
       },
     };
