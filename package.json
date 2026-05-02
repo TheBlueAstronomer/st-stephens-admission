@@ -1,5 +1,5 @@
 {
-  "name": "app",
+  "name": "stephens-admission",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -7,6 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
     "db:seed": "npx tsx prisma/seed.ts",
     "db:push": "pnpm prisma db push",
     "db:reset": "pnpm prisma db push --force-reset && pnpm db:seed"

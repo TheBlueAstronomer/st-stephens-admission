@@ -83,7 +83,7 @@ export function ScheduleInterviewDialog({
   } = useScheduleInterviewDialog({
     applicantId,
     applicantName,
-    onOpenChange,
+    onOpenChangeAction: onOpenChange,
     bapBlocked,
   });
 

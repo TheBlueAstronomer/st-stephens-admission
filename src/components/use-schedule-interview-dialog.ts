@@ -15,12 +15,12 @@ interface Interviewer {
 export function useScheduleInterviewDialog({
   applicantId,
   applicantName,
-  onOpenChange,
+  onOpenChangeAction,
   bapBlocked,
 }: {
   applicantId: string;
   applicantName: string;
-  onOpenChange: (open: boolean) => void;
+  onOpenChangeAction: (open: boolean) => void;
   bapBlocked: boolean;
 }) {
   const { isPending, executeAction } = useActionExecutor();
@@ -79,7 +79,7 @@ export function useScheduleInterviewDialog({
         })}`,
       refresh: true,
       onSuccess: () => {
-        onOpenChange(false);
+        onOpenChangeAction(false);
         resetForm();
       },
       onError: (message) => {

@@ -24,14 +24,14 @@ export function InterviewHeaderCard({
   interview,
   canEdit,
   isPending,
-  onMarkInvitation,
-  onMarkApplication,
+  onMarkInvitationAction,
+  onMarkApplicationAction,
 }: {
   interview: InterviewDetail;
   canEdit: boolean;
   isPending: boolean;
-  onMarkInvitation: () => void;
-  onMarkApplication: () => void;
+  onMarkInvitationAction: () => void;
+  onMarkApplicationAction: () => void;
 }) {
   return (
     <Card className="rounded-2xl border-black/6 shadow-sm shadow-black/3">
@@ -96,7 +96,7 @@ export function InterviewHeaderCard({
               size="sm"
               className="rounded-full text-xs"
               disabled={isPending}
-              onClick={onMarkInvitation}
+              onClick={onMarkInvitationAction}
             >
               <PaperPlaneTiltIcon size={12} weight="light" className="mr-1" />
               Mark Invitation Sent
@@ -118,7 +118,7 @@ export function InterviewHeaderCard({
               size="sm"
               className="rounded-full text-xs"
               disabled={isPending}
-              onClick={onMarkApplication}
+              onClick={onMarkApplicationAction}
             >
               <FileTextIcon size={12} weight="light" className="mr-1" />
               Mark Application Received
@@ -159,11 +159,11 @@ export function InterviewNotesOutcomeSection({
   followUpActions,
   selectedOutcome,
   error,
-  onNotesChange,
-  onFollowUpActionsChange,
-  onSaveNotes,
-  onSelectOutcome,
-  onRecordOutcome,
+  onNotesChangeAction,
+  onFollowUpActionsChangeAction,
+  onSaveNotesAction,
+  onSelectOutcomeAction,
+  onRecordOutcomeAction,
 }: {
   interview: InterviewDetail;
   canEdit: boolean;
@@ -173,11 +173,11 @@ export function InterviewNotesOutcomeSection({
   followUpActions: string;
   selectedOutcome: InterviewOutcome | null;
   error: string | null;
-  onNotesChange: (value: string) => void;
-  onFollowUpActionsChange: (value: string) => void;
-  onSaveNotes: () => void;
-  onSelectOutcome: (outcome: InterviewOutcome) => void;
-  onRecordOutcome: () => void;
+  onNotesChangeAction: (value: string) => void;
+  onFollowUpActionsChangeAction: (value: string) => void;
+  onSaveNotesAction: () => void;
+  onSelectOutcomeAction: (outcome: InterviewOutcome) => void;
+  onRecordOutcomeAction: () => void;
 }) {
   const isCompleted = interview.status === 'COMPLETED';
 
@@ -196,7 +196,7 @@ export function InterviewNotesOutcomeSection({
           </Label>
           <Textarea
             value={notes}
-            onChange={(e) => onNotesChange(e.target.value)}
+            onChange={(e) => onNotesChangeAction(e.target.value)}
             placeholder="Record interview notes here..."
             className="min-h-30 rounded-xl"
             disabled={isCompleted && !canEdit}
@@ -209,7 +209,7 @@ export function InterviewNotesOutcomeSection({
           </Label>
           <Textarea
             value={followUpActions}
-            onChange={(e) => onFollowUpActionsChange(e.target.value)}
+            onChange={(e) => onFollowUpActionsChangeAction(e.target.value)}
             placeholder="Any follow-up actions required..."
             className="min-h-20 rounded-xl"
             disabled={isCompleted && !canEdit}
@@ -220,7 +220,7 @@ export function InterviewNotesOutcomeSection({
           <Button
             variant="outline"
             className="rounded-full"
-            onClick={onSaveNotes}
+            onClick={onSaveNotesAction}
             disabled={isPending}
           >
             Save Notes
@@ -237,7 +237,7 @@ export function InterviewNotesOutcomeSection({
                 <button
                   key={opt.value}
                   type="button"
-                  onClick={() => onSelectOutcome(opt.value)}
+                  onClick={() => onSelectOutcomeAction(opt.value)}
                   className={`rounded-xl border px-4 py-2.5 text-sm font-medium transition-all ${
                     selectedOutcome === opt.value
                       ? opt.color + ' ring-2 ring-offset-1 ring-current'
@@ -293,7 +293,7 @@ export function InterviewNotesOutcomeSection({
             <Button
               className="rounded-full bg-brand-solid px-6 text-brand-solid-foreground hover:bg-brand-solid/90"
               disabled={!selectedOutcome || isPending}
-              onClick={onRecordOutcome}
+              onClick={onRecordOutcomeAction}
             >
               {isPending ? (
                 <>

@@ -9,6 +9,32 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: ssh_admissions
+          POSTGRES_USER: ssh
+          POSTGRES_PASSWORD: devpass123
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ssh -d ssh_admissions"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://ssh:devpass123@localhost:5432/ssh_admissions?schema=public
+      NEXTAUTH_SECRET: ci-test-secret-not-for-production
+      NEXTAUTH_URL: http://localhost:3000
+      E2E_AUTH_ENABLED: 'true'
+      AZURE_AD_CLIENT_ID: ci-placeholder-client-id
+      AZURE_AD_CLIENT_SECRET: ci-placeholder-client-secret
+      AZURE_AD_TENANT_ID: ci-placeholder-tenant-id
+      MICROSOFT_GRAPH_CLIENT_ID: ci-placeholder-graph-client-id
+      MICROSOFT_GRAPH_CLIENT_SECRET: ci-placeholder-graph-client-secret
+      MICROSOFT_GRAPH_TENANT_ID: ci-placeholder-graph-tenant-id
+      SHAREPOINT_SITE_ID: ci-placeholder-site-id
 
     steps:
       - uses: actions/checkout@v4
@@ -26,8 +52,16 @@ jobs:
 
       - run: npx prisma generate
 
+      - run: pnpm prisma db push
+
+      - run: pnpm db:seed
+
       - run: pnpm lint
 
       - run: pnpm test
 
       - run: pnpm build
+
+      - run: pnpm exec playwright install --with-deps chromium
+
+      - run: pnpm test:e2e

@@ -2,12 +2,15 @@ import { redirect } from 'next/navigation';
 import { DevLoginPicker } from '@/components/dev-login-picker';
 
 export default function DevLoginPage() {
-  if (process.env.NODE_ENV !== 'development') {
+  if (
+    process.env.NODE_ENV !== 'development' &&
+    process.env.E2E_AUTH_ENABLED !== 'true'
+  ) {
     redirect('/login');
   }
 
   return (
-    <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-[#F8F7F5] px-4">
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-[#F8F7F5] px-4">
       <div className="mb-8 text-center">
         <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800">
           <span className="inline-block h-2 w-2 rounded-full bg-amber-500 animate-pulse" />

@@ -38,7 +38,7 @@ describe('US-02: Auth.js configuration', () => {
     const content = fs.readFileSync(path.resolve(__dirname, '../lib/auth.ts'), 'utf-8');
     expect(content).toContain("Credentials");
     expect(content).toContain("'dev-credentials'");
-    expect(content).toContain("NODE_ENV === 'development'");
+    expect(content).toContain("E2E_AUTH_ENABLED === 'true'");
   });
 
   it('auth config rejects users not in User table', async () => {

@@ -9,6 +9,7 @@ import type { InterviewDetail } from '@/components/interview-detail/shared';
 
 const interview: InterviewDetail = {
   id: 'interview-1',
+  applicantId: 'applicant-1',
   interviewType: 'EXPLORATORY_VISIT',
   status: 'SCHEDULED',
   scheduledAt: new Date('2026-03-10T10:00:00.000Z'),
@@ -17,15 +18,20 @@ const interview: InterviewDetail = {
   notes: null,
   followUpActions: null,
   invitationSentAt: null,
+  invitationSentByUserId: null,
   interviewApplicationReceivedAt: null,
+  createdByUserId: 'creator',
+  updatedByUserId: 'updater',
   createdAt: new Date('2026-03-01T10:00:00.000Z'),
   updatedAt: new Date('2026-03-02T10:00:00.000Z'),
   panelMembers: [
     {
+      userId: 'u-1',
       user: {
         id: 'u-1',
         name: 'Jane Smith',
         email: 'jane@example.com',
+        role: 'ACADEMIC_STAFF',
       },
     },
   ],
@@ -52,8 +58,8 @@ describe('interview detail extracted sections', () => {
         interview={interview}
         canEdit={true}
         isPending={false}
-        onMarkInvitation={() => {}}
-        onMarkApplication={() => {}}
+        onMarkInvitationAction={() => {}}
+        onMarkApplicationAction={() => {}}
       />,
     );
 

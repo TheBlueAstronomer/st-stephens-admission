@@ -116,8 +116,8 @@ export function InterviewDetailView({
             interview={interview}
             canEdit={canEdit}
             isPending={isPending}
-            onMarkInvitation={handleMarkInvitation}
-            onMarkApplication={handleMarkApplication}
+            onMarkInvitationAction={handleMarkInvitation}
+            onMarkApplicationAction={handleMarkApplication}
           />
 
           <InterviewNotesOutcomeSection
@@ -129,11 +129,11 @@ export function InterviewDetailView({
             followUpActions={followUpActions}
             selectedOutcome={selectedOutcome}
             error={error}
-            onNotesChange={setNotes}
-            onFollowUpActionsChange={setFollowUpActions}
-            onSaveNotes={handleSaveNotes}
-            onSelectOutcome={setSelectedOutcome}
-            onRecordOutcome={handleRecordOutcome}
+            onNotesChangeAction={setNotes}
+            onFollowUpActionsChangeAction={setFollowUpActions}
+            onSaveNotesAction={handleSaveNotes}
+            onSelectOutcomeAction={setSelectedOutcome}
+            onRecordOutcomeAction={handleRecordOutcome}
           />
         </div>
 

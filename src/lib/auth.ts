@@ -6,6 +6,9 @@ import { PrismaAdapter } from '@auth/prisma-adapter';
 import { prisma } from '@/lib/db';
 import type { UserRole } from '@/generated/prisma/client';
 
+const isTestAuthEnabled =
+  process.env.NODE_ENV === 'development' || process.env.E2E_AUTH_ENABLED === 'true';
+
 const providers: Provider[] = [
   MicrosoftEntraID({
     clientId: process.env.AZURE_AD_CLIENT_ID!,
@@ -15,7 +18,7 @@ const providers: Provider[] = [
 ];
 
 // Dev-only credentials provider — sign in by email without Microsoft
-if (process.env.NODE_ENV === 'development') {
+if (isTestAuthEnabled) {
   providers.push(
     Credentials({
       id: 'dev-credentials',
