@@ -17,8 +17,8 @@
 - **Test**: Request the admin screen as `SENIOR_LEADERSHIP`; assert 403.
 
 ### Acceptance Criteria
-- [ ] Only `SYSTEM_ADMINISTRATOR` can access the administration screen.
-- [ ] All other roles receive an unauthorised (403) response.
+- [x] Only `SYSTEM_ADMINISTRATOR` can access the administration screen.
+- [x] All other roles receive an unauthorised (403) response.
 
 ### Implementation Steps
 1. **Route-level RBAC** — in `middleware.ts`, the `/admin/*` routes should only allow `SYSTEM_ADMINISTRATOR`. All other roles receive 403.
@@ -45,9 +45,9 @@ Create `e2e/f08-admin.spec.ts`:
 - **Test**: Assert the new user can authenticate and access role-appropriate routes.
 
 ### Acceptance Criteria
-- [ ] A new User record is created with the correct role.
-- [ ] The user is active and can log in immediately (subject to Entra ID account).
-- [ ] An `AuditLog` entry is created for the user creation.
+- [x] A new User record is created with the correct role.
+- [x] The user is active and can log in immediately (subject to Entra ID account).
+- [x] An `AuditLog` entry is created for the user creation.
 
 ### Implementation Steps
 1. **Create a Zod schema** — `src/lib/validations/user.ts` requiring `name`, `email`, and `role` (enum of `UserRole`).
@@ -72,9 +72,9 @@ Create `e2e/f08-admin.spec.ts`:
 - **Test**: Assert an `AuditLog` entry records the deactivation.
 
 ### Acceptance Criteria
-- [ ] Deactivated users are denied access on their next request.
-- [ ] `isActive` is set to `false`.
-- [ ] An `AuditLog` entry records the deactivation.
+- [x] Deactivated users are denied access on their next request.
+- [x] `isActive` is set to `false`.
+- [x] An `AuditLog` entry records the deactivation.
 
 ### Implementation Steps
 1. **Create the `deactivateUser` server action** — `requireRole('SYSTEM_ADMINISTRATOR')`. Set `isActive = false` on the `User` record.
@@ -97,9 +97,9 @@ Create `e2e/f08-admin.spec.ts`:
 - **Test**: Assert an `AuditLog` entry records the old and new role.
 
 ### Acceptance Criteria
-- [ ] The user's role is updated in the database.
-- [ ] The change takes effect on the user's next session.
-- [ ] An `AuditLog` entry records the change with previous and new values.
+- [x] The user's role is updated in the database.
+- [x] The change takes effect on the user's next session.
+- [x] An `AuditLog` entry records the change with previous and new values.
 
 ### Implementation Steps
 1. **Create the `updateUserRole` server action** — `requireRole('SYSTEM_ADMINISTRATOR')`. Accept `userId` and `newRole`. Update the `User` record.
@@ -122,9 +122,9 @@ Create `e2e/f08-admin.spec.ts`:
 - **Test**: Assert existing applicants on the deactivated programme are not affected.
 
 ### Acceptance Criteria
-- [ ] New programmes appear in applicant record dropdowns and filters.
-- [ ] Deactivated programmes do not appear in dropdowns for new records.
-- [ ] Existing applicants linked to deactivated programmes retain their data.
+- [x] New programmes appear in applicant record dropdowns and filters.
+- [x] Deactivated programmes do not appear in dropdowns for new records.
+- [x] Existing applicants linked to deactivated programmes retain their data.
 
 ### Implementation Steps
 1. **Create `createProgramme` and `deactivateProgramme` server actions** — `requireRole('SYSTEM_ADMINISTRATOR')`. `createProgramme` accepts `name`, `code`, `isActive = true`. `deactivateProgramme` sets `isActive = false`.
@@ -148,8 +148,8 @@ Create `e2e/f08-admin.spec.ts`:
 - **Test**: Edit a diocese name; assert the change is reflected in filters and applicant records.
 
 ### Acceptance Criteria
-- [ ] New dioceses appear in applicant list filters and report groupings.
-- [ ] Edited diocese names are reflected throughout the system.
+- [x] New dioceses appear in applicant list filters and report groupings.
+- [x] Edited diocese names are reflected throughout the system.
 
 ### Implementation Steps
 1. **Create `createDiocese` and `updateDiocese` server actions** — `requireRole('SYSTEM_ADMINISTRATOR')`. `createDiocese` accepts `name`. `updateDiocese` accepts `id` and `name`.
@@ -172,8 +172,8 @@ Create `e2e/f08-admin.spec.ts`:
 - **Test**: Assert existing applicants retain their current checklist (not retroactively modified).
 
 ### Acceptance Criteria
-- [ ] New document types appear in the checklist for new applicants.
-- [ ] Existing applicants are not retroactively affected.
+- [x] New document types appear in the checklist for new applicants.
+- [x] Existing applicants are not retroactively affected.
 
 ### Implementation Steps
 1. **Create `createDocumentType` and `updateDocumentType` server actions** — `requireRole('SYSTEM_ADMINISTRATOR')`. `createDocumentType` accepts `name`, `isRequired`, `isSensitive`.
@@ -196,8 +196,8 @@ Create `e2e/f08-admin.spec.ts`:
 - **Test**: Create an applicant for the new year; assert the applicant is linked to it.
 
 ### Acceptance Criteria
-- [ ] New admissions years appear in all year-based filters and dropdowns.
-- [ ] Applicants can be created for the new admissions year.
+- [x] New admissions years appear in all year-based filters and dropdowns.
+- [x] Applicants can be created for the new admissions year.
 
 ### Implementation Steps
 1. **Create `createAdmissionsYear` server action** — `requireRole('SYSTEM_ADMINISTRATOR')`. Accept `label` (e.g., "2025/26"), `startDate`, `endDate`.
@@ -221,9 +221,9 @@ Create `e2e/f08-admin.spec.ts`:
 - **Test**: Apply a date range filter; assert only entries within the range are shown.
 
 ### Acceptance Criteria
-- [ ] The viewer displays all required fields.
-- [ ] Filtering by entity type, action, user, and date range works correctly.
-- [ ] Entries are read-only — no edit or delete actions are available.
+- [x] The viewer displays all required fields.
+- [x] Filtering by entity type, action, user, and date range works correctly.
+- [x] Entries are read-only — no edit or delete actions are available.
 
 ### Implementation Steps
 1. **Build the Audit Log tab** — inside the Admin page, an "Audit Log" tab with a `Table` showing all audit entries.
@@ -256,8 +256,8 @@ Add to `e2e/f08-admin.spec.ts`:
 - **Test**: Assert no edit or delete buttons are rendered in the viewer UI.
 
 ### Acceptance Criteria
-- [ ] No edit or delete endpoints exist for audit log entries.
-- [ ] The viewer UI does not render edit or delete controls.
+- [x] No edit or delete endpoints exist for audit log entries.
+- [x] The viewer UI does not render edit or delete controls.
 
 ### Implementation Steps
 1. **No update/delete server actions** — do NOT create any server actions for updating or deleting `AuditLog` records. The Prisma model should have no exposed mutation methods beyond `create`.

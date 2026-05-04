@@ -143,9 +143,22 @@ describe('US-01: Prisma Schema Enums', () => {
       'INTERVIEW_APPLICATION_SUBMITTED',
       'REGISTRATION_SUBMITTED',
       'PENDING_SUBMISSION_RESOLVED',
+      'USER_CREATED',
+      'USER_DEACTIVATED',
+      'USER_REACTIVATED',
+      'ROLE_CHANGED',
+      'PROGRAMME_CREATED',
+      'PROGRAMME_DEACTIVATED',
+      'PROGRAMME_REACTIVATED',
+      'PROGRAMME_UPDATED',
+      'DIOCESE_CREATED',
+      'DIOCESE_UPDATED',
+      'DOCUMENT_TYPE_CREATED',
+      'DOCUMENT_TYPE_UPDATED',
+      'ADMISSIONS_YEAR_CREATED',
     ];
     expect(Object.values(AuditAction)).toEqual(expect.arrayContaining(expected));
-    expect(Object.values(AuditAction)).toHaveLength(18);
+    expect(Object.values(AuditAction)).toHaveLength(31);
   });
 });
 
