@@ -20,6 +20,11 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "SSH Admissions",
   description: "St Stephen's House Admissions Management System",
+  icons: {
+    icon: "/St_Stephen's_House_CollegeShield.png",
+    shortcut: "/St_Stephen's_House_CollegeShield.png",
+    apple: "/St_Stephen's_House_CollegeShield.png",
+  },
 };
 
 export default function RootLayout({

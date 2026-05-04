@@ -1,5 +1,5 @@
 'use client';
-
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
@@ -32,6 +32,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { getNavItemsForRole } from '@/lib/rbac';
 import type { UserRole } from '@/generated/prisma/client';
+import collegeShield from "@/app/St_Stephen's_House_CollegeShield.png";
 
 const ICON_MAP: Record<string, React.ComponentType<React.ComponentProps<typeof HouseIcon>>> = {
   House: HouseIcon,
@@ -79,9 +80,12 @@ export function AppSidebar({ user }: AppSidebarProps) {
     <Sidebar collapsible="icon" className="border-r border-white/10">
       <SidebarHeader className="p-4">
         <Link href="/dashboard" className="flex items-center gap-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/15 text-xs font-bold text-white">
-            SSH
-          </div>
+          <Image
+            src={collegeShield}
+            alt="St Stephen's House crest"
+            className="h-9 w-9 shrink-0 rounded-lg border border-white/20 bg-white/90 p-1 shadow-sm"
+            priority
+          />
           <span className="text-sm font-semibold text-white truncate group-data-[collapsible=icon]:hidden">
             St Stephen&apos;s House
           </span>

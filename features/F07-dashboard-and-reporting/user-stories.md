@@ -15,9 +15,9 @@
 - **Test**: Add a new applicant; re-render; assert totals update.
 
 ### Acceptance Criteria
-- [ ] Dashboard displays all required metrics from PRD §5.2.
-- [ ] Totals reflect the current state of the database (no stale cache).
-- [ ] Accommodation demand summary is included.
+- [x] Dashboard displays all required metrics from PRD §5.2.
+- [x] Totals reflect the current state of the database (no stale cache).
+- [x] Accommodation demand summary is included.
 
 ### Implementation Steps
 1. **Create the dashboard page** — `src/app/(staff)/dashboard/page.tsx`. Fetch all aggregate metrics server-side.
@@ -50,9 +50,9 @@ Create `e2e/f07-dashboard.spec.ts`:
 - **Test**: Combine multiple filters; assert intersection behaviour.
 
 ### Acceptance Criteria
-- [ ] Each filter independently narrows the displayed data.
-- [ ] Multiple filters combine as AND.
-- [ ] Clearing filters restores the full view.
+- [x] Each filter independently narrows the displayed data.
+- [x] Multiple filters combine as AND.
+- [x] Clearing filters restores the full view.
 
 ### Implementation Steps
 1. **Add a filter bar** — below the KPI cards. Shadcn `Select` dropdowns for: Admissions Year, Programme, Status, Diocese.
@@ -80,9 +80,9 @@ Add to `e2e/f07-dashboard.spec.ts`:
 - **Test**: Seed applicants; render the pipeline report; assert counts match the seeded data grouped by status, year, and programme.
 
 ### Acceptance Criteria
-- [ ] Report shows applicant count by status.
-- [ ] Report shows applicant count by admissions year.
-- [ ] Report shows applicant count by programme.
+- [x] Report shows applicant count by status.
+- [x] Report shows applicant count by admissions year.
+- [x] Report shows applicant count by programme.
 
 ### Implementation Steps
 1. **Create the reports page** — `src/app/(staff)/reports/page.tsx` with a sidebar navigation listing all 6 reports.
@@ -106,9 +106,9 @@ Add to `e2e/f07-dashboard.spec.ts`:
 - **Test**: Seed applicants across dioceses with varying offer and confirmation states; render the report; assert counts are correct per diocese.
 
 ### Acceptance Criteria
-- [ ] Report shows applicant count by diocese.
-- [ ] Report shows offer count by diocese.
-- [ ] Report shows confirmed ordinand count by diocese.
+- [x] Report shows applicant count by diocese.
+- [x] Report shows offer count by diocese.
+- [x] Report shows confirmed ordinand count by diocese.
 
 ### Implementation Steps
 1. **Build the Diocese Distribution Report** — `src/app/(staff)/reports/diocese/page.tsx`. Query applicant, offer, and confirmed ordinand counts grouped by diocese.
@@ -130,9 +130,9 @@ Add to `e2e/f07-dashboard.spec.ts`:
 - **Test**: Seed an applicant blocked by BAP (incomplete, no exception); assert they appear in the "blocked" list.
 
 ### Acceptance Criteria
-- [ ] Report shows Stage 1 BAP status distribution.
-- [ ] Report shows Stage 2 BAP status distribution.
-- [ ] Report lists applicants blocked due to missing BAP information.
+- [x] Report shows Stage 1 BAP status distribution.
+- [x] Report shows Stage 2 BAP status distribution.
+- [x] Report lists applicants blocked due to missing BAP information.
 
 ### Implementation Steps
 1. **Build the BAP Status Report** — `src/app/(staff)/reports/bap-status/page.tsx`. Query BAP stage 1 and stage 2 status distribution.
@@ -153,7 +153,7 @@ Add to `e2e/f07-dashboard.spec.ts`:
 - **Test**: Seed applicants at each offer/registration stage; render the report; assert counts match.
 
 ### Acceptance Criteria
-- [ ] Report shows counts for: conditional offers, unconditional offers, accepted offers, registrations received, confirmed ordinands.
+- [x] Report shows counts for: conditional offers, unconditional offers, accepted offers, registrations received, confirmed ordinands.
 
 ### Implementation Steps
 1. **Build the Offers vs Registrations Report** — `src/app/(staff)/reports/offers-registrations/page.tsx`. Query counts for each stage of the offer-to-confirmation funnel.
@@ -175,10 +175,10 @@ Add to `e2e/f07-dashboard.spec.ts`:
 - **Test**: Assert total family unit size is summed correctly.
 
 ### Acceptance Criteria
-- [ ] Total accommodation demand = single rooms + family units.
-- [ ] Single and family unit counts are correct.
-- [ ] Term-time vs full-year split is shown.
-- [ ] Total family unit size is displayed.
+- [x] Total accommodation demand = single rooms + family units.
+- [x] Single and family unit counts are correct.
+- [x] Term-time vs full-year split is shown.
+- [x] Total family unit size is displayed.
 
 ### Implementation Steps
 1. **Build the Accommodation Demand Report** — `src/app/(staff)/reports/accommodation/page.tsx`. Query `AccommodationRequest` records for confirmed/registered applicants.
@@ -201,9 +201,9 @@ Add to `e2e/f07-dashboard.spec.ts`:
 - **Test**: Assert waived documents are shown separately.
 
 ### Acceptance Criteria
-- [ ] Report lists applicants with at least one outstanding required document.
-- [ ] Missing documents per applicant are listed.
-- [ ] Waived documents are shown.
+- [x] Report lists applicants with at least one outstanding required document.
+- [x] Missing documents per applicant are listed.
+- [x] Waived documents are shown.
 
 ### Implementation Steps
 1. **Build the Missing Documents Report** — `src/app/(staff)/reports/missing-documents/page.tsx`. Use the `getMissingDocuments()` query from F05-US-07.
@@ -225,10 +225,10 @@ Add to `e2e/f07-dashboard.spec.ts`:
 - **Test**: Assert the CSV file is named descriptively.
 
 ### Acceptance Criteria
-- [ ] Each of the 6 reports can be exported as CSV.
-- [ ] The filtered applicant list can be exported as CSV.
-- [ ] CSV files contain all displayed columns and rows.
-- [ ] Files are named descriptively.
+- [x] Each of the 6 reports can be exported as CSV.
+- [x] The filtered applicant list can be exported as CSV.
+- [x] CSV files contain all displayed columns and rows.
+- [x] Files are named descriptively.
 
 ### Implementation Steps
 1. **Create a reusable `exportReportCSV()` utility** — `src/lib/services/csv-export.ts`. Accepts a report name, column definitions, and row data. Generates a CSV string.
@@ -251,9 +251,9 @@ Add to `e2e/f07-dashboard.spec.ts`:
 - **Test**: Access the dashboard as an applicant (if applicant auth exists); assert 403.
 
 ### Acceptance Criteria
-- [ ] Senior leadership can access dashboard and reports in read-only mode.
-- [ ] Unauthenticated requests are redirected to login.
-- [ ] No applicant-role access to dashboard or reports.
+- [x] Senior leadership can access dashboard and reports in read-only mode.
+- [x] Unauthenticated requests are redirected to login.
+- [x] No applicant-role access to dashboard or reports.
 
 ### Implementation Steps
 1. **Route-level RBAC** — in `middleware.ts`, the dashboard and report routes should allow `ADMISSIONS_STAFF`, `SENIOR_LEADERSHIP`, and `SYSTEM_ADMINISTRATOR`. Block `ACADEMIC_STAFF` (unless they need dashboard access — check PRD).

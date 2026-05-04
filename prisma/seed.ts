@@ -394,6 +394,60 @@ async function main() {
     console.log('  ✓ Sample documents for Sophie Turner: GCSE/A-Level received, Undergrad waived, others outstanding');
   }
 
+  // ─── F07 Dashboard: Accommodation Requests ─────────────────────────────
+
+  console.log('\n🌱 Seeding F07 accommodation data...\n');
+
+  const davidApplicant = await prisma.applicant.findFirst({
+    where: { applicantId: 'SSH-2025-0005' },
+  });
+  const sarahApplicant = await prisma.applicant.findFirst({
+    where: { applicantId: 'SSH-2025-0004' },
+  });
+
+  if (davidApplicant) {
+    await prisma.accommodationRequest.upsert({
+      where: { applicantId: davidApplicant.id },
+      update: {},
+      create: {
+        applicantId: davidApplicant.id,
+        isAccommodationRequired: true,
+        accommodationType: 'SINGLE',
+        duration: 'FULL_YEAR',
+      },
+    });
+    console.log('  ✓ Accommodation: David Brown — Single, Full-year');
+  }
+
+  if (sarahApplicant) {
+    await prisma.accommodationRequest.upsert({
+      where: { applicantId: sarahApplicant.id },
+      update: {},
+      create: {
+        applicantId: sarahApplicant.id,
+        isAccommodationRequired: true,
+        accommodationType: 'FAMILY',
+        duration: 'TERM_TIME',
+        familyUnitSize: 3,
+      },
+    });
+    console.log('  ✓ Accommodation: Sarah Williams — Family (3), Term-time');
+  }
+
+  if (thomasApplicant) {
+    await prisma.accommodationRequest.upsert({
+      where: { applicantId: thomasApplicant.id },
+      update: {},
+      create: {
+        applicantId: thomasApplicant.id,
+        isAccommodationRequired: true,
+        accommodationType: 'SINGLE',
+        duration: 'TERM_TIME',
+      },
+    });
+    console.log('  ✓ Accommodation: Thomas Hughes — Single, Term-time');
+  }
+
   console.log('\n✅ Seed complete. Dev login available at /dev/login\n');
 }
 
