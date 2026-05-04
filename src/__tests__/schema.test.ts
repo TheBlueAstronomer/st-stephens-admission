@@ -140,9 +140,12 @@ describe('US-01: Prisma Schema Enums', () => {
       'OFFER_CREATED',
       'OFFER_ACCEPTED',
       'REGISTRATION_RECEIVED',
+      'INTERVIEW_APPLICATION_SUBMITTED',
+      'REGISTRATION_SUBMITTED',
+      'PENDING_SUBMISSION_RESOLVED',
     ];
     expect(Object.values(AuditAction)).toEqual(expect.arrayContaining(expected));
-    expect(Object.values(AuditAction)).toHaveLength(15);
+    expect(Object.values(AuditAction)).toHaveLength(18);
   });
 });
 
@@ -285,8 +288,9 @@ describe('US-01: Prisma Schema Models — field shapes via create input types', 
 
   it('DocumentType reference data model has name and isActive', () => {
     const input: Prisma.DocumentTypeCreateInput = {
+      slug: "",
       name: 'GCSE_TRANSCRIPT',
-      isActive: true,
+      isActive: true
     };
     expect(input.name).toBe('GCSE_TRANSCRIPT');
   });

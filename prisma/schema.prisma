@@ -112,6 +112,9 @@ enum AuditAction {
   OFFER_ACCEPTED
   REGISTRATION_RECEIVED
   CONFIRMED_ORDINAND
+  INTERVIEW_APPLICATION_SUBMITTED
+  REGISTRATION_SUBMITTED
+  PENDING_SUBMISSION_RESOLVED
 }
 
 // ─── Models ─────────────────────────────────────────────────────────────────
@@ -138,6 +141,7 @@ model User {
   interviewsUpdated     Interview[]  @relation("InterviewUpdatedBy")
   invitationsSent       Interview[]  @relation("InvitationSentBy")
   interviewPanels       InterviewPanel[]
+  resolvedSubmissions   PendingSubmission[]
 }
 
 /// Auth.js Account model (required by @auth/prisma-adapter).
@@ -220,9 +224,10 @@ model Applicant {
   accommodationRequest AccommodationRequest?
 
   // One-to-many
-  documents  ApplicantDocument[]
-  interviews Interview[]
-  auditLogs  AuditLog[] @relation("ApplicantAuditLogs")
+  documents          ApplicantDocument[]
+  interviews         Interview[]
+  auditLogs          AuditLog[] @relation("ApplicantAuditLogs")
+  pendingSubmissions PendingSubmission[]
 }
 
 /// PRD §6.2 — Church-related applicant information.
@@ -410,6 +415,25 @@ model Diocese {
 
   applicants        Applicant[]
   ecclesialProfiles EcclesialProfile[]
+}
+
+/// F06 — Pending form submissions awaiting staff review (low-confidence match).
+model PendingSubmission {
+  id                  String   @id @default(cuid())
+  formType            String   // 'INTERVIEW_APPLICATION' | 'REGISTRATION'
+  submittedData       Json
+  submittedEmail      String?
+  submittedName       String?
+  submittedDob        DateTime?
+  potentialMatchId    String?
+  needsReview         Boolean  @default(true)
+  resolvedAction      String?  // 'MERGED' | 'CREATED_NEW' | 'DISMISSED'
+  resolvedByUserId    String?
+  resolvedAt          DateTime?
+  createdAt           DateTime @default(now())
+
+  potentialMatch Applicant? @relation(fields: [potentialMatchId], references: [id])
+  resolvedBy     User?      @relation(fields: [resolvedByUserId], references: [id])
 }
 
 /// Reference data — Document type configuration.

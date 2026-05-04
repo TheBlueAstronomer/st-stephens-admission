@@ -16,9 +16,9 @@
 - **Test**: Render the form at a mobile viewport; assert the layout is responsive (no horizontal overflow).
 
 ### Acceptance Criteria
-- [ ] The form is accessible at a public URL without authentication.
-- [ ] All sections from PRD §5.7 are present.
-- [ ] The form renders correctly on mobile and desktop viewports.
+- [x] The form is accessible at a public URL without authentication.
+- [x] All sections from PRD §5.7 are present.
+- [x] The form renders correctly on mobile and desktop viewports.
 
 ### Implementation Steps
 1. **Create the form route** — `src/app/(public)/forms/interview-application/page.tsx`. This route is public (no auth required).
@@ -51,9 +51,9 @@ Create `e2e/f06-interview-application-form.spec.ts`:
 - **Test**: Submit with all required fields filled; assert the submission is accepted.
 
 ### Acceptance Criteria
-- [ ] Client-side validation prevents submission with missing required fields.
-- [ ] Server-side validation rejects incomplete submissions with clear error messages.
-- [ ] Validation messages are accessible (WCAG 2.1 AA).
+- [x] Client-side validation prevents submission with missing required fields.
+- [x] Server-side validation rejects incomplete submissions with clear error messages.
+- [x] Validation messages are accessible (WCAG 2.1 AA).
 
 ### Implementation Steps
 1. **Create a Zod validation schema** — `src/lib/validations/interview-application-form.ts` with all required fields per step (legalName, email, phone, diocese, DDO, BAP status, programme, etc.).
@@ -85,11 +85,11 @@ Add to `e2e/f06-interview-application-form.spec.ts`:
 - **Test**: Assert an `AuditLog` entry is created.
 
 ### Acceptance Criteria
-- [ ] A matched existing applicant record is updated with form data.
-- [ ] If no match, a new applicant record is created.
-- [ ] Status transitions to `INTERVIEW_APPLICATION_RECEIVED`.
-- [ ] The applicant sees a confirmation message.
-- [ ] An `AuditLog` entry is created.
+- [x] A matched existing applicant record is updated with form data.
+- [x] If no match, a new applicant record is created.
+- [x] Status transitions to `INTERVIEW_APPLICATION_RECEIVED`.
+- [x] The applicant sees a confirmation message.
+- [x] An `AuditLog` entry is created.
 
 ### Implementation Steps
 1. **Create the `submitInterviewApplication` server action** — `src/app/(public)/forms/interview-application/actions.ts`. No auth required (public form).
@@ -122,9 +122,9 @@ Add to `e2e/f06-interview-application-form.spec.ts`:
 - **Test**: Render the form; assert all required sections: contact confirmation, programme confirmation, accommodation preferences, supporting bishop details, passport photo upload, additional documents, and e-signature/declaration.
 
 ### Acceptance Criteria
-- [ ] The form is accessible at a public URL without authentication.
-- [ ] All sections from PRD §5.8 are present.
-- [ ] The form renders correctly on mobile and desktop viewports.
+- [x] The form is accessible at a public URL without authentication.
+- [x] All sections from PRD §5.8 are present.
+- [x] The form renders correctly on mobile and desktop viewports.
 
 ### Implementation Steps
 1. **Create the form route** — `src/app/(public)/forms/registration/page.tsx`. Public, no auth.
@@ -157,10 +157,10 @@ Create `e2e/f06-registration-form.spec.ts`:
 - **Test**: Assert an `AuditLog` entry is created.
 
 ### Acceptance Criteria
-- [ ] The matched applicant record is updated with registration data.
-- [ ] `registrationFormReceivedAt` is recorded.
-- [ ] Status transitions to `REGISTRATION_FORM_RECEIVED`.
-- [ ] The applicant sees a confirmation message.
+- [x] The matched applicant record is updated with registration data.
+- [x] `registrationFormReceivedAt` is recorded.
+- [x] Status transitions to `REGISTRATION_FORM_RECEIVED`.
+- [x] The applicant sees a confirmation message.
 
 ### Implementation Steps
 1. **Create the `submitRegistration` server action** — `src/app/(public)/forms/registration/actions.ts`. No auth.
@@ -185,9 +185,9 @@ Create `e2e/f06-registration-form.spec.ts`:
 - **Test**: Seed an applicant with ID `APP-2025-001`; submit a form with the same applicant ID; assert the existing record is updated.
 
 ### Acceptance Criteria
-- [ ] Exact match via applicant ID updates the existing record.
-- [ ] Exact match via email updates the existing record.
-- [ ] No duplicate record is created for a high-confidence match.
+- [x] Exact match via applicant ID updates the existing record.
+- [x] Exact match via email updates the existing record.
+- [x] No duplicate record is created for a high-confidence match.
 
 ### Implementation Steps
 1. **Create a `findMatchingApplicant()` utility** — `src/lib/services/duplicate-matching.ts`. Accepts form data (email, applicantId, legalName, dateOfBirth). Returns `{ match: Applicant | null, confidence: 'HIGH' | 'LOW' | 'NONE' }`.
@@ -209,9 +209,9 @@ Create `e2e/f06-registration-form.spec.ts`:
 - **Test**: Assert the flagged submission appears in the admissions staff review queue.
 
 ### Acceptance Criteria
-- [ ] Low-confidence matches are flagged for staff review.
-- [ ] The submission is not automatically applied to the existing record.
-- [ ] Admissions staff can review and resolve the match in their interface.
+- [x] Low-confidence matches are flagged for staff review.
+- [x] The submission is not automatically applied to the existing record.
+- [x] Admissions staff can review and resolve the match in their interface.
 
 ### Implementation Steps
 1. **Extend `findMatchingApplicant()`** — if no high-confidence match found, attempt low-confidence match by `legalName` + `dateOfBirth`. If matched, return `confidence: 'LOW'`.
@@ -258,11 +258,11 @@ Create `e2e/f06-registration-form.spec.ts`:
 - **Test**: Assert validation messages are announced to screen readers.
 
 ### Acceptance Criteria
-- [ ] Both forms meet WCAG 2.1 AA criteria.
-- [ ] All form inputs have accessible labels.
-- [ ] Validation messages are screen-reader friendly.
-- [ ] Forms are keyboard navigable.
-- [ ] Colour contrast is sufficient.
+- [x] Both forms meet WCAG 2.1 AA criteria.
+- [x] All form inputs have accessible labels.
+- [x] Validation messages are screen-reader friendly.
+- [x] Forms are keyboard navigable.
+- [x] Colour contrast is sufficient.
 
 ### Implementation Steps
 1. **Ensure semantic HTML** — use `<form>`, `<fieldset>`, `<legend>`, `<label>` elements throughout. Every `Input` must have an associated `<label>` (via `htmlFor` or wrapping).
