@@ -19,26 +19,29 @@ A bespoke admissions management system for St Stephen's House, Oxford — managi
 
 - **Node.js** 20+
 - **pnpm** 9+
-- **PostgreSQL** 15+
+- **Docker Compose**
 
 ## Getting Started
 
 ```bash
 # Clone the repository
 git clone <repo-url>
-cd app
+cd StephensAdmission
 
 # Install dependencies
 pnpm install
 
 # Copy environment variables and fill in values
-cp .env.example .env.local
+cp .env.example .env
 
-# Generate Prisma client
-npx prisma generate
+# Start PostgreSQL
+docker compose up -d
 
-# Run database migrations
-npx prisma migrate dev
+# Push the schema to your local database
+pnpm db:push
+
+# Seed local development data
+pnpm db:seed
 
 # Start the development server
 pnpm dev
@@ -46,18 +49,28 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000) to see the application.
 
+## Local Development Notes
+
+- **Database**: `docker compose up -d` starts a local PostgreSQL 15 instance on `localhost:5432` using the credentials already shown in `.env.example`.
+- **Authentication**: Local development can use the development login flow. Microsoft Entra ID credentials are only required if you want to exercise the real identity provider integration.
+- **Document storage**: Microsoft Graph / SharePoint environment variables are only required for document-storage features.
+- **Stopping PostgreSQL**: Run `docker compose down` to stop the local database.
+- **Resetting local data**: Run `pnpm db:reset` to recreate the schema and reseed the database.
+
 ## Available Scripts
 
 | Script | Description |
 |--------|-------------|
 | `pnpm dev` | Start Next.js dev server |
-| `pnpm build` | Production build (includes type-check) |
+| `pnpm build` | Create a production build |
 | `pnpm start` | Start production server |
 | `pnpm lint` | Run ESLint |
-| `pnpm format` | Format code with Prettier |
 | `pnpm test` | Run Vitest unit/integration tests |
 | `pnpm test:watch` | Run Vitest in watch mode |
 | `pnpm test:e2e` | Run Playwright end-to-end tests |
+| `pnpm db:push` | Push the Prisma schema to the configured database |
+| `pnpm db:seed` | Seed the configured database with development data |
+| `pnpm db:reset` | Reset the configured database and reseed it |
 
 ## Project Structure
 
