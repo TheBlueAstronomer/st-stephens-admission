@@ -36,7 +36,7 @@ export function DashboardExportButton({ filters }: DashboardExportButtonProps) {
     <Button
       variant="outline"
       size="sm"
-      className="rounded-full"
+      className="rounded-full transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none"
       onClick={handleExport}
       disabled={exporting}
     >

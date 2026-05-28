@@ -60,8 +60,9 @@ export function PipelineChart({ data }: PipelineChartProps) {
           <Bar
             dataKey="count"
             radius={[6, 6, 0, 0]}
-            isAnimationActive={true}
-            animationDuration={800}
+            isAnimationActive="auto"
+            animationDuration={240}
+            animationEasing="ease-out"
           >
             {filtered.map((entry) => (
               <Cell

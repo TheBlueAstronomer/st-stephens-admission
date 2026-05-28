@@ -42,8 +42,9 @@ export function AccommodationChart({ data }: AccommodationChartProps) {
             outerRadius={80}
             paddingAngle={4}
             dataKey="value"
-            isAnimationActive={true}
-            animationDuration={800}
+            isAnimationActive="auto"
+            animationDuration={240}
+            animationEasing="ease-out"
           >
             {chartData.map((_, idx) => (
               <Cell key={idx} fill={COLORS[idx % COLORS.length]} />

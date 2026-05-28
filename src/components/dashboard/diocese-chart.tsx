@@ -57,8 +57,9 @@ export function DioceseChart({ data }: DioceseChartProps) {
             dataKey="applicantCount"
             fill="#525f7f"
             radius={[0, 6, 6, 0]}
-            isAnimationActive={true}
-            animationDuration={800}
+            isAnimationActive="auto"
+            animationDuration={240}
+            animationEasing="ease-out"
           />
         </BarChart>
       </ResponsiveContainer>

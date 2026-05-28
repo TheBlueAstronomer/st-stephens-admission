@@ -30,8 +30,22 @@ export function BapChart({ stageOne, stageTwo }: BapChartProps) {
           <YAxis tick={{ fontSize: 11, fill: '#5b5f68' }} tickLine={false} axisLine={false} allowDecimals={false} />
           <Tooltip contentStyle={{ borderRadius: '0.75rem', border: '1px solid rgba(0,0,0,0.06)', fontSize: '13px' }} />
           <Legend wrapperStyle={{ fontSize: '12px' }} />
-          <Bar dataKey="Stage 1" fill="#525f7f" radius={[4, 4, 0, 0]} />
-          <Bar dataKey="Stage 2" fill="#C4A882" radius={[4, 4, 0, 0]} />
+          <Bar
+            dataKey="Stage 1"
+            fill="#525f7f"
+            radius={[4, 4, 0, 0]}
+            isAnimationActive="auto"
+            animationDuration={240}
+            animationEasing="ease-out"
+          />
+          <Bar
+            dataKey="Stage 2"
+            fill="#C4A882"
+            radius={[4, 4, 0, 0]}
+            isAnimationActive="auto"
+            animationDuration={240}
+            animationEasing="ease-out"
+          />
         </BarChart>
       </ResponsiveContainer>
     </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { cn } from '@/lib/utils';
 
 interface KpiStatCardProps {
@@ -11,20 +11,45 @@ interface KpiStatCardProps {
   delay?: number;
 }
 
+const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
+
+function subscribeToReducedMotion(onChange: () => void) {
+  const mediaQuery = window.matchMedia(REDUCED_MOTION_QUERY);
+  mediaQuery.addEventListener('change', onChange);
+  return () => mediaQuery.removeEventListener('change', onChange);
+}
+
+function getReducedMotionSnapshot() {
+  return window.matchMedia(REDUCED_MOTION_QUERY).matches;
+}
+
+function getReducedMotionServerSnapshot() {
+  return false;
+}
+
 export function KpiStatCard({ label, value, subtitle, icon, delay = 0 }: KpiStatCardProps) {
   const [displayed, setDisplayed] = useState(0);
   const [visible, setVisible] = useState(false);
+  const prefersReducedMotion = useSyncExternalStore(
+    subscribeToReducedMotion,
+    getReducedMotionSnapshot,
+    getReducedMotionServerSnapshot,
+  );
   const rafRef = useRef<number | null>(null);
+  const isVisible = prefersReducedMotion || visible;
+  const visibleValue = prefersReducedMotion ? value : displayed;
 
   useEffect(() => {
+    if (prefersReducedMotion) return;
+
     const timeout = setTimeout(() => setVisible(true), delay);
     return () => clearTimeout(timeout);
-  }, [delay]);
+  }, [delay, prefersReducedMotion]);
 
   useEffect(() => {
-    if (!visible) return;
+    if (!isVisible || prefersReducedMotion) return;
 
-    const duration = 600;
+    const duration = 220;
     const startTime = performance.now();
 
     function animate(now: number) {
@@ -42,13 +67,13 @@ export function KpiStatCard({ label, value, subtitle, icon, delay = 0 }: KpiStat
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [value, visible]);
+  }, [value, isVisible, prefersReducedMotion]);
 
   return (
     <div
       className={cn(
-        'rounded-[1.5rem] p-1.5 bg-black/4 ring-1 ring-black/6 transition-all duration-500',
-        visible
+        'rounded-[1.5rem] bg-black/4 p-1.5 ring-1 ring-black/6 transition-[transform,opacity] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] motion-reduce:translate-y-0 motion-reduce:transition-none',
+        isVisible
           ? 'translate-y-0 opacity-100'
           : 'translate-y-4 opacity-0',
       )}
@@ -59,7 +84,7 @@ export function KpiStatCard({ label, value, subtitle, icon, delay = 0 }: KpiStat
         </p>
         <div className="mt-1 flex items-baseline gap-3">
           <span className="text-[2.5rem] font-bold leading-none text-[#1A2744]">
-            {displayed}
+            {visibleValue}
           </span>
           <span className="text-muted-foreground">{icon}</span>
         </div>

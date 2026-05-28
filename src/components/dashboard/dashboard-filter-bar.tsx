@@ -105,7 +105,13 @@ export function DashboardFilterBar({ filters, referenceData }: DashboardFilterBa
 
         {/* Clear all */}
         {activeFilters.length > 0 && (
-          <Button variant="ghost" size="sm" onClick={clearAllFilters} data-testid="clear-filters">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.97] motion-reduce:transition-none"
+            onClick={clearAllFilters}
+            data-testid="clear-filters"
+          >
             Clear Filters
           </Button>
         )}
@@ -122,7 +128,7 @@ export function DashboardFilterBar({ filters, referenceData }: DashboardFilterBa
               {value}
               <button
                 onClick={() => updateFilter(key, undefined)}
-                className="ml-1.5 rounded-full p-0.5 hover:bg-black/10"
+                className="ml-1.5 rounded-full p-0.5 transition-[transform,background-color] duration-150 ease-out hover:bg-black/10 active:scale-[0.97] motion-reduce:transition-none"
               >
                 <XIcon size={12} />
               </button>

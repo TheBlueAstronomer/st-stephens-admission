@@ -1,4 +1,3 @@
-import { Suspense } from 'react';
 import {
   getDashboardKpis,
   getPipelineByStatus,
@@ -83,35 +82,35 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           value={kpis.totalInterviews}
           subtitle="scheduled + completed"
           icon={<CalendarCheckIcon size={20} weight="light" />}
-          delay={80}
+          delay={40}
         />
         <KpiStatCard
           label="Offers"
           value={kpis.totalOffers}
           subtitle="conditional + unconditional"
           icon={<SealCheckIcon size={20} weight="light" />}
-          delay={160}
+          delay={80}
         />
         <KpiStatCard
           label="Registrations"
           value={kpis.totalRegistrations}
           subtitle="forms received"
           icon={<FileTextIcon size={20} weight="light" />}
-          delay={240}
+          delay={120}
         />
         <KpiStatCard
           label="Ordinands"
           value={kpis.confirmedOrdinands}
           subtitle="confirmed"
           icon={<CrossIcon size={20} weight="light" />}
-          delay={320}
+          delay={160}
         />
         <KpiStatCard
           label="Accommodation"
           value={kpis.accommodationDemand}
           subtitle={`${accommodation.singleRooms} single, ${accommodation.familyUnits} family`}
           icon={<HouseIcon size={20} weight="light" />}
-          delay={400}
+          delay={200}
         />
       </div>
 
