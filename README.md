@@ -85,19 +85,32 @@ src/
 │   └── page.tsx          # Root page
 ├── components/
 │   └── ui/               # shadcn/ui primitives (Button, etc.)
+├── features/
+│   ├── admin/            # System administration actions, UI, queries, validation
+│   ├── admissions-lifecycle/
+│   │   └── ...           # Cross-stage status rules, BAP gate, progress view models
+│   ├── applicants/       # Applicant records, list/detail UI, workflows, validation
+│   ├── app-shell/        # Authenticated shell navigation and topbar components
+│   ├── auth/             # Login and development-login UI
+│   ├── dashboard/        # Dashboard queries, charts, filters, CSV export
+│   ├── documents/        # Document fulfilment, SharePoint integration, checklist UI
+│   ├── interviews/       # Interview scheduling/outcome workflows and UI
+│   ├── offers/           # Offer, registration, ordinand confirmation workflows
+│   ├── public-forms/     # Applicant-facing forms, schemas, form actions
+│   └── reports/          # Reporting queries, charts, tables, CSV export
 ├── generated/
 │   └── prisma/           # Prisma generated client (gitignored)
 ├── lib/
-│   ├── business-rules/   # Business rule utilities (gates, guards)
-│   ├── constants/        # Enums, config values
-│   ├── queries/          # Reusable Prisma queries
-│   ├── services/         # External service integrations (Graph, CSV)
-│   ├── validations/      # Zod schemas
 │   ├── db.ts             # Prisma client singleton
+│   ├── auth.ts           # Auth.js configuration
+│   ├── require-role.ts   # Shared role guard
+│   ├── action-result.ts  # Shared action result helpers
+│   ├── audit-log.ts      # Shared audit-log formatting helpers
+│   ├── formatters/       # Cross-feature formatters
 │   └── utils.ts          # shadcn cn() utility
 ├── test/
 │   └── setup.ts          # Vitest setup (jest-dom matchers)
-└── __tests__/            # Global test files
+└── __tests__/            # Cross-cutting infrastructure tests
 prisma/
 ├── schema.prisma         # Database schema
 └── migrations/           # Database migrations
@@ -108,9 +121,10 @@ e2e/
 ## Folder Conventions
 
 - All imports use `@/` path alias mapped to `src/`.
-- All server actions live in `actions.ts` files co-located with their route.
-- All Zod schemas live in `src/lib/validations/`.
-- All business rule utilities live in `src/lib/business-rules/`.
+- Next.js route files live in `src/app/`; route-level `actions.ts` files may remain as thin compatibility wrappers.
+- Feature-owned code lives under `src/features/<feature>/`, including components, queries, workflows, validations, business rules, and focused tests.
+- Shared infrastructure lives in `src/lib/`; keep it limited to utilities that are not owned by a product feature.
+- shadcn/ui primitives live in `src/components/ui/`; feature components should not be added to global `src/components/`.
 
 ## Contributing
 

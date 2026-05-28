@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import {PrismaClient} from '@/generated/prisma/client';
 import {PrismaPg} from '@prisma/adapter-pg';
-import {DOCUMENT_TYPES} from '@/lib/constants/document-types';
+import {DOCUMENT_TYPES} from '@/features/documents/constants/document-types';
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });

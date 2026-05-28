@@ -1,10 +1,10 @@
-import { getOffersRegistrationsReport, type ReportFilterParams } from '@/lib/queries/reports';
-import { getReferenceData } from '@/lib/queries/applicants';
-import { ReportFilterBar } from '@/components/reports/report-filter-bar';
-import { CsvExportButton } from '@/components/reports/csv-export-button';
-import { reportFilename } from '@/lib/services/csv-export';
-import { KpiStatCard } from '@/components/dashboard/kpi-stat-card';
-import { OffersRegistrationsFunnel } from '@/components/reports/offers-funnel-chart';
+import { getOffersRegistrationsReport, type ReportFilterParams } from '@/features/reports/queries/reports';
+import { getReferenceData } from '@/features/applicants/queries/applicants';
+import { ReportFilterBar } from '@/features/reports/components/report-filter-bar';
+import { CsvExportButton } from '@/features/reports/components/csv-export-button';
+import { reportFilename } from '@/features/reports/services/csv-export';
+import { KpiStatCard } from '@/features/dashboard/components/kpi-stat-card';
+import { OffersRegistrationsFunnel } from '@/features/reports/components/offers-funnel-chart';
 import {
   SealCheckIcon,
   FileTextIcon,

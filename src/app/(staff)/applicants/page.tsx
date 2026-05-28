@@ -1,10 +1,10 @@
 import { Suspense } from 'react';
 import { auth } from '@/lib/auth';
-import { getApplicantList } from '@/lib/queries/applicants';
-import { getReferenceData } from '@/lib/queries/applicants';
-import { ApplicantTable } from '@/components/applicant-table';
-import { ApplicantListHeader } from '@/components/applicant-list-header';
-import { ApplicantFilterBar } from '@/components/applicant-filter-bar';
+import { getApplicantList } from '@/features/applicants/queries/applicants';
+import { getReferenceData } from '@/features/applicants/queries/applicants';
+import { ApplicantTable } from '@/features/applicants/components/applicant-table';
+import { ApplicantListHeader } from '@/features/applicants/components/applicant-list-header';
+import { ApplicantFilterBar } from '@/features/applicants/components/applicant-filter-bar';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface ApplicantsPageProps {

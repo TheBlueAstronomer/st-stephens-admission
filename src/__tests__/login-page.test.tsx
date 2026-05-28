@@ -7,7 +7,7 @@ vi.mock('next-auth/react', () => ({
   signOut: vi.fn(),
 }));
 
-import { LoginCard } from '@/components/login-card';
+import { LoginCard } from '@/features/auth/components/login-card';
 
 // ─── US-07: Login Screen ────────────────────────────────────────────────────
 

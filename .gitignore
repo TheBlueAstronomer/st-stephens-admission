@@ -27,6 +27,11 @@
 /.idea
 *.pem
 
+# local agent/ruflo state
+/.swarm/
+/ruvector.db*
+/start-ruflo-*.sh
+
 # debug
 npm-debug.log*
 yarn-debug.log*

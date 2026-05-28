@@ -1,9 +1,9 @@
-import { getMissingDocsReport, type ReportFilterParams } from '@/lib/queries/reports';
-import { getReferenceData } from '@/lib/queries/applicants';
-import { ReportFilterBar } from '@/components/reports/report-filter-bar';
-import { CsvExportButton } from '@/components/reports/csv-export-button';
-import { reportFilename } from '@/lib/services/csv-export';
-import { STATUS_LABELS } from '@/lib/constants/applicant-status';
+import { getMissingDocsReport, type ReportFilterParams } from '@/features/reports/queries/reports';
+import { getReferenceData } from '@/features/applicants/queries/applicants';
+import { ReportFilterBar } from '@/features/reports/components/report-filter-bar';
+import { CsvExportButton } from '@/features/reports/components/csv-export-button';
+import { reportFilename } from '@/features/reports/services/csv-export';
+import { STATUS_LABELS } from '@/features/admissions-lifecycle/constants/applicant-status';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';

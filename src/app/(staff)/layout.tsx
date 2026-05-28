@@ -2,8 +2,8 @@ import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { AppSidebar } from '@/components/app-sidebar';
-import { AppTopbar } from '@/components/app-topbar';
+import { AppSidebar } from '@/features/app-shell/components/app-sidebar';
+import { AppTopbar } from '@/features/app-shell/components/app-topbar';
 
 export default async function StaffLayout({
   children,

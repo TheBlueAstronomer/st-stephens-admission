@@ -19,8 +19,8 @@ describe('Rank 6 shared action result regressions', () => {
   it('applicant and interview actions import the shared action result contract instead of defining local ones', async () => {
     const fs = await import('fs');
     const path = await import('path');
-    const applicantActionsPath = path.resolve(__dirname, '../app/(staff)/applicants/actions.ts');
-    const interviewActionsPath = path.resolve(__dirname, '../app/(staff)/interviews/actions.ts');
+    const applicantActionsPath = path.resolve(__dirname, '../features/applicants/actions/applicant-actions.ts');
+    const interviewActionsPath = path.resolve(__dirname, '../features/interviews/actions/interview-actions.ts');
     const applicantContent = fs.readFileSync(applicantActionsPath, 'utf-8');
     const interviewContent = fs.readFileSync(interviewActionsPath, 'utf-8');
 

@@ -1,6 +1,6 @@
 import { auth } from '@/lib/auth';
-import { getAllInterviews, getInterviewsForUser } from '@/lib/queries/interviews';
-import { InterviewListView } from '@/components/interview-list-view';
+import { getAllInterviews, getInterviewsForUser } from '@/features/interviews/queries/interviews';
+import { InterviewListView } from '@/features/interviews/components/interview-list-view';
 
 export default async function InterviewsPage() {
   const session = await auth();

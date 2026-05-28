@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { DevLoginPicker } from '@/components/dev-login-picker';
+import { DevLoginPicker } from '@/features/auth/components/dev-login-picker';
 
 export default function DevLoginPage() {
   if (

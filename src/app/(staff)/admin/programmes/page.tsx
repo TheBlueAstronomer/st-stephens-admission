@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/db';
-import { ProgrammeManagementTable } from '@/components/admin/programme-management-table';
+import { ProgrammeManagementTable } from '@/features/admin/components/programme-management-table';
 
 export const dynamic = 'force-dynamic';
 

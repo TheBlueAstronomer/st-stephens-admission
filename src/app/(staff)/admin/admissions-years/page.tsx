@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/db';
-import { AdmissionsYearManagementTable } from '@/components/admin/admissions-year-management-table';
+import { AdmissionsYearManagementTable } from '@/features/admin/components/admissions-year-management-table';
 
 export const dynamic = 'force-dynamic';
 

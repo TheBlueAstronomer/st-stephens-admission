@@ -4,15 +4,15 @@ import {
   getAccommodationSummary,
   getDioceseDistribution,
   getBapSummary,
-} from '@/lib/queries/dashboard';
-import { getReferenceData } from '@/lib/queries/applicants';
-import { KpiStatCard } from '@/components/dashboard/kpi-stat-card';
-import { PipelineChart } from '@/components/dashboard/pipeline-chart';
-import { AccommodationChart } from '@/components/dashboard/accommodation-chart';
-import { DioceseChart } from '@/components/dashboard/diocese-chart';
-import { BapChart } from '@/components/dashboard/bap-chart';
-import { DashboardFilterBar } from '@/components/dashboard/dashboard-filter-bar';
-import { DashboardExportButton } from '@/components/dashboard/dashboard-export-button';
+} from '@/features/dashboard/queries/dashboard';
+import { getReferenceData } from '@/features/applicants/queries/applicants';
+import { KpiStatCard } from '@/features/dashboard/components/kpi-stat-card';
+import { PipelineChart } from '@/features/dashboard/components/pipeline-chart';
+import { AccommodationChart } from '@/features/dashboard/components/accommodation-chart';
+import { DioceseChart } from '@/features/dashboard/components/diocese-chart';
+import { BapChart } from '@/features/dashboard/components/bap-chart';
+import { DashboardFilterBar } from '@/features/dashboard/components/dashboard-filter-bar';
+import { DashboardExportButton } from '@/features/dashboard/components/dashboard-export-button';
 import {
   UsersIcon,
   CalendarCheckIcon,

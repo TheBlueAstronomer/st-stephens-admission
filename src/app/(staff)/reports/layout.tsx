@@ -1,4 +1,4 @@
-import { ReportNav } from '@/components/reports/report-nav';
+import { ReportNav } from '@/features/reports/components/report-nav';
 
 export default function ReportsLayout({ children }: { children: React.ReactNode }) {
   return (

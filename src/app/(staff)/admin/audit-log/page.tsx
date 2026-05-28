@@ -1,6 +1,6 @@
 import type { AuditAction } from '@/generated/prisma/client';
-import { getAuditLogEntries, getAuditLogFilterOptions } from '@/lib/queries/audit-log';
-import { AuditLogTable } from '@/components/admin/audit-log-table';
+import { getAuditLogEntries, getAuditLogFilterOptions } from '@/features/admin/queries/audit-log';
+import { AuditLogTable } from '@/features/admin/components/audit-log-table';
 
 export const dynamic = 'force-dynamic';
 

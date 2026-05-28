@@ -4,8 +4,8 @@ describe('Rank 2 service-layer regressions', () => {
   it('defines applicant and interview workflow modules under the services convention', async () => {
     const fs = await import('fs');
     const path = await import('path');
-    const applicantWorkflowPath = path.resolve(__dirname, '../lib/services/applicant-workflows.ts');
-    const interviewWorkflowPath = path.resolve(__dirname, '../lib/services/interview-workflows.ts');
+    const applicantWorkflowPath = path.resolve(__dirname, '../features/applicants/services/applicant-workflows.ts');
+    const interviewWorkflowPath = path.resolve(__dirname, '../features/interviews/services/interview-workflows.ts');
 
     expect(fs.existsSync(applicantWorkflowPath)).toBe(true);
     expect(fs.existsSync(interviewWorkflowPath)).toBe(true);
@@ -27,10 +27,10 @@ describe('Rank 2 service-layer regressions', () => {
   it('applicant actions are thin wrappers over services instead of direct prisma orchestration', async () => {
     const fs = await import('fs');
     const path = await import('path');
-    const actionsPath = path.resolve(__dirname, '../app/(staff)/applicants/actions.ts');
+    const actionsPath = path.resolve(__dirname, '../features/applicants/actions/applicant-actions.ts');
     const content = fs.readFileSync(actionsPath, 'utf-8');
 
-    expect(content).toContain("from '@/lib/services/applicant-workflows'");
+    expect(content).toContain("from '@/features/applicants/services/applicant-workflows'");
     expect(content).toContain('createApplicantWorkflow(');
     expect(content).toContain('updateApplicantStatusWorkflow(');
     expect(content).toContain('updateApplicantDetailsWorkflow(');
@@ -44,10 +44,10 @@ describe('Rank 2 service-layer regressions', () => {
   it('interview actions are thin wrappers over services instead of direct prisma orchestration', async () => {
     const fs = await import('fs');
     const path = await import('path');
-    const actionsPath = path.resolve(__dirname, '../app/(staff)/interviews/actions.ts');
+    const actionsPath = path.resolve(__dirname, '../features/interviews/actions/interview-actions.ts');
     const content = fs.readFileSync(actionsPath, 'utf-8');
 
-    expect(content).toContain("from '@/lib/services/interview-workflows'");
+    expect(content).toContain("from '@/features/interviews/services/interview-workflows'");
     expect(content).toContain('scheduleInterviewWorkflow(');
     expect(content).toContain('recordInterviewOutcomeWorkflow(');
     expect(content).toContain('saveInterviewNotesWorkflow(');

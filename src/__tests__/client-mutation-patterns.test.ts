@@ -19,10 +19,10 @@ describe('Rank 8 shared client mutation pattern regressions', () => {
     const fs = await import('fs');
     const path = await import('path');
     const targetPaths = [
-      path.resolve(__dirname, '../components/applicant-detail-view.tsx'),
-      path.resolve(__dirname, '../components/interview-detail-view.tsx'),
-      path.resolve(__dirname, '../components/use-schedule-interview-dialog.ts'),
-      path.resolve(__dirname, '../components/applicant-detail/tabs.tsx'),
+      path.resolve(__dirname, '../features/applicants/components/applicant-detail-view.tsx'),
+      path.resolve(__dirname, '../features/interviews/components/interview-detail-view.tsx'),
+      path.resolve(__dirname, '../features/interviews/components/use-schedule-interview-dialog.ts'),
+      path.resolve(__dirname, '../features/applicants/components/detail/tabs.tsx'),
     ];
 
     for (const targetPath of targetPaths) {

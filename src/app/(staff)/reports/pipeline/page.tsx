@@ -1,10 +1,10 @@
-import { getPipelineReport, type ReportFilterParams } from '@/lib/queries/reports';
-import { getReferenceData } from '@/lib/queries/applicants';
-import { ReportFilterBar } from '@/components/reports/report-filter-bar';
-import { CsvExportButton } from '@/components/reports/csv-export-button';
-import { PipelineReportChart } from '@/components/reports/pipeline-report-chart';
-import { PipelineReportTable } from '@/components/reports/pipeline-report-table';
-import { reportFilename } from '@/lib/services/csv-export';
+import { getPipelineReport, type ReportFilterParams } from '@/features/reports/queries/reports';
+import { getReferenceData } from '@/features/applicants/queries/applicants';
+import { ReportFilterBar } from '@/features/reports/components/report-filter-bar';
+import { CsvExportButton } from '@/features/reports/components/csv-export-button';
+import { PipelineReportChart } from '@/features/reports/components/pipeline-report-chart';
+import { PipelineReportTable } from '@/features/reports/components/pipeline-report-table';
+import { reportFilename } from '@/features/reports/services/csv-export';
 
 export const dynamic = 'force-dynamic';
 

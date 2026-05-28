@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/db';
-import { DocumentTypeManagementTable } from '@/components/admin/document-type-management-table';
+import { DocumentTypeManagementTable } from '@/features/admin/components/document-type-management-table';
 
 export const dynamic = 'force-dynamic';
 

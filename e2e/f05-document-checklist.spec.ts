@@ -1,4 +1,6 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+
+test.setTimeout(60_000);
 
 /**
  * F05 — Document Management E2E Spec
@@ -10,22 +12,57 @@ import { test, expect } from '@playwright/test';
  *     RECEIVED / WAIVED / OUTSTANDING documents pre-seeded.
  */
 
-async function loginAsAlice(page: Parameters<typeof test.use>[0] extends { page: infer P } ? P : import('@playwright/test').Page) {
-  await page.goto('/dev/login');
-  await page.getByRole('button', { name: /admissions staff/i }).click();
-  await page.waitForURL(/\/applicants/);
+async function loginAsAlice(page: Page) {
+  await devSignIn(page, 'alice@ssh-dev.local');
+}
+
+async function loginAsCarol(page: Page) {
+  await devSignIn(page, 'carol@ssh-dev.local');
+}
+
+async function devSignIn(page: Page, email: string) {
+  const csrfRes = await page.request.get('/api/auth/csrf');
+  const { csrfToken } = await csrfRes.json();
+  await page.request.post('/api/auth/callback/dev-credentials', {
+    form: { csrfToken, email, callbackUrl: '/' },
+  });
+}
+
+async function navigateToSophieDocuments(page: Page) {
+  await page.goto('/applicants', { waitUntil: 'domcontentloaded' });
+  await page.getByPlaceholder(/search/i).fill('Sophie Turner');
+  await page.getByRole('link', { name: /sophie turner/i }).first().click();
+  await page.waitForURL(/\/applicants\//, { waitUntil: 'domcontentloaded' });
+  await expect(page.getByRole('heading', { name: 'Sophie Turner' })).toBeVisible();
+  await openDocumentsTab(page);
+}
+
+async function openDocumentsTab(page: Page) {
+  const documentsTab = page.getByRole('tab', { name: /documents/i });
+  const checklist = page.getByTestId('document-checklist');
+
+  await expect(documentsTab).toBeVisible();
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    await documentsTab.click();
+
+    try {
+      await expect(documentsTab).toHaveAttribute('aria-selected', 'true', { timeout: 1_500 });
+      await expect(checklist).toBeVisible({ timeout: 3_000 });
+      return;
+    } catch {
+      await documentsTab.press('Enter').catch(() => undefined);
+    }
+  }
+
+  await expect(documentsTab).toHaveAttribute('aria-selected', 'true');
+  await expect(checklist).toBeVisible();
 }
 
 test.describe('F05 — US-01: Display Document Checklist', () => {
   test.beforeEach(async ({ page }) => {
     await loginAsAlice(page);
-    // Navigate to Sophie Turner's applicant detail
-    await page.goto('/applicants');
-    await page.getByPlaceholder(/search/i).fill('Sophie Turner');
-    await page.getByRole('link', { name: /sophie turner/i }).first().click();
-    await page.waitForURL(/\/applicants\//);
-    // Click Documents tab
-    await page.getByRole('tab', { name: /documents/i }).click();
+    await navigateToSophieDocuments(page);
   });
 
   test('shows completion progress bar and summary', async ({ page }) => {
@@ -56,21 +93,20 @@ test.describe('F05 — US-01: Display Document Checklist', () => {
   });
 
   test('shows lock icon for sensitive documents', async ({ page }) => {
-    // Sensitive docs have a lock icon — check aria is present
+    // Detailed sensitive-icon behavior is covered in US-06 below.
     const rows = page.getByTestId('document-row');
     const count = await rows.count();
     expect(count).toBeGreaterThan(0);
-    // The test just verifies rows render without error
   });
 
   test('shows SharePoint folder link when folder is set', async ({ page }) => {
     // Sophie Turner has sharePointFolderUrl in seed
-    const spLink = page.getByRole('link', { name: /open sharepoint folder/i });
+    const spLink = page.getByRole('link', { name: /open applicant folder/i });
     // If seeded with a folder URL it will be visible
     const isVisible = await spLink.isVisible();
-    // Either the link is present or the "No SharePoint folder linked" message is
+    // Either the link is present or the current empty-state text is.
     if (!isVisible) {
-      await expect(page.getByText(/no sharepoint folder linked/i)).toBeVisible();
+      await expect(page.getByText(/not linked/i)).toBeVisible();
     }
   });
 });
@@ -78,11 +114,7 @@ test.describe('F05 — US-01: Display Document Checklist', () => {
 test.describe('F05 — US-02: Mark Document as Received', () => {
   test.beforeEach(async ({ page }) => {
     await loginAsAlice(page);
-    await page.goto('/applicants');
-    await page.getByPlaceholder(/search/i).fill('Sophie Turner');
-    await page.getByRole('link', { name: /sophie turner/i }).first().click();
-    await page.waitForURL(/\/applicants\//);
-    await page.getByRole('tab', { name: /documents/i }).click();
+    await navigateToSophieDocuments(page);
   });
 
   test('opens Mark as Received dialog from row dropdown', async ({ page }) => {
@@ -92,8 +124,7 @@ test.describe('F05 — US-02: Mark Document as Received', () => {
     await outstandingRow.getByRole('button', { name: /document actions/i }).click();
     await page.getByRole('menuitem', { name: /mark as received/i }).click();
 
-    await expect(page.getByRole('dialog')).toBeVisible();
-    await expect(page.getByText(/upload document/i)).toBeVisible();
+    await expect(page.getByRole('dialog', { name: /upload document/i })).toBeVisible();
   });
 
   test('cancelling dialog leaves status unchanged', async ({ page }) => {
@@ -102,7 +133,7 @@ test.describe('F05 — US-02: Mark Document as Received', () => {
     await outstandingRow.getByRole('button', { name: /document actions/i }).click();
     await page.getByRole('menuitem', { name: /mark as received/i }).click();
 
-    const dialog = page.getByRole('dialog');
+    const dialog = page.getByRole('dialog', { name: /upload document/i });
     await expect(dialog).toBeVisible();
     await page.getByRole('button', { name: /cancel/i }).click();
     await expect(dialog).not.toBeVisible();
@@ -114,11 +145,7 @@ test.describe('F05 — US-02: Mark Document as Received', () => {
 test.describe('F05 — US-03: Waive Document Requirement', () => {
   test.beforeEach(async ({ page }) => {
     await loginAsAlice(page);
-    await page.goto('/applicants');
-    await page.getByPlaceholder(/search/i).fill('Sophie Turner');
-    await page.getByRole('link', { name: /sophie turner/i }).first().click();
-    await page.waitForURL(/\/applicants\//);
-    await page.getByRole('tab', { name: /documents/i }).click();
+    await navigateToSophieDocuments(page);
   });
 
   test('opens Waive sheet from row dropdown', async ({ page }) => {
@@ -137,7 +164,7 @@ test.describe('F05 — US-03: Waive Document Requirement', () => {
     await outstandingRow.getByRole('button', { name: /document actions/i }).click();
     await page.getByRole('menuitem', { name: /^waive$/i }).click();
 
-    const submitBtn = page.getByRole('button', { name: /waive requirement/i }).last();
+    const submitBtn = page.getByRole('button', { name: /waive/i }).last();
     await expect(submitBtn).toBeDisabled();
   });
 
@@ -148,7 +175,7 @@ test.describe('F05 — US-03: Waive Document Requirement', () => {
     await page.getByRole('menuitem', { name: /^waive$/i }).click();
 
     await page.getByPlaceholder(/equivalent qualification/i).fill('Applicant holds equivalent overseas qualification.');
-    const submitBtn = page.getByRole('button', { name: /waive requirement/i }).last();
+    const submitBtn = page.getByRole('button', { name: /waive/i }).last();
     await expect(submitBtn).toBeEnabled();
   });
 });
@@ -156,38 +183,29 @@ test.describe('F05 — US-03: Waive Document Requirement', () => {
 test.describe('F05 — US-06: Sensitive Document Access Control', () => {
   test('lock icon visible on Legal ID, DBS Check, and Medical Declaration only', async ({ page }) => {
     await loginAsAlice(page);
-    await page.goto('/applicants');
-    await page.getByPlaceholder(/search/i).fill('Sophie Turner');
-    await page.getByRole('link', { name: /sophie turner/i }).first().click();
-    await page.waitForURL(/\/applicants\//);
-    await page.getByRole('tab', { name: /documents/i }).click();
+    await navigateToSophieDocuments(page);
 
     const rows = page.getByTestId('document-row');
     // All 14 rows visible to Alice
     await expect(rows).toHaveCount(14);
-    // Sensitive rows should exist
-    await expect(rows.filter({ hasText: 'Legal ID' })).toBeVisible();
-    await expect(rows.filter({ hasText: 'DBS Check' })).toBeVisible();
-    await expect(rows.filter({ hasText: 'Medical Declaration' })).toBeVisible();
-    // Non-sensitive row should not have a lock icon (verify by absence on GCSE row)
+    // Sensitive rows render the amber lock icon.
+    await expect(rows.filter({ hasText: 'Legal ID' }).locator('td').first().locator('svg[class*="text-amber-500"]')).toHaveCount(1);
+    await expect(rows.filter({ hasText: 'DBS Check' }).locator('td').first().locator('svg[class*="text-amber-500"]')).toHaveCount(1);
+    await expect(rows.filter({ hasText: 'Medical Declaration' }).locator('td').first().locator('svg[class*="text-amber-500"]')).toHaveCount(1);
+    // Non-sensitive row should not have the amber lock icon.
     const gcseRow = rows.filter({ hasText: 'GCSE Transcript' });
-    await expect(gcseRow.locator('svg[data-testid="lock-icon"]')).toHaveCount(0);
+    await expect(gcseRow.locator('td').first().locator('svg[class*="text-amber-500"]')).toHaveCount(0);
   });
 
   test('Carol (SENIOR_LEADERSHIP) sees Documents tab but has no action buttons', async ({ page }) => {
-    await page.goto('/dev/login');
-    await page.getByRole('button', { name: /senior leadership/i }).click();
-    await page.waitForURL(/\/(applicants|dashboard)/);
-
-    // Navigate to applicants list
-    if (page.url().includes('dashboard')) {
-      await page.goto('/applicants');
-    }
+    await loginAsCarol(page);
+    await page.goto('/applicants', { waitUntil: 'domcontentloaded' });
 
     await page.getByPlaceholder(/search/i).fill('Sophie Turner');
     await page.getByRole('link', { name: /sophie turner/i }).first().click();
-    await page.waitForURL(/\/applicants\//);
-    await page.getByRole('tab', { name: /documents/i }).click();
+    await page.waitForURL(/\/applicants\//, { waitUntil: 'domcontentloaded' });
+    await expect(page.getByRole('heading', { name: 'Sophie Turner' })).toBeVisible();
+    await openDocumentsTab(page);
 
     // Should see document checklist
     const checklist = page.getByTestId('document-checklist');

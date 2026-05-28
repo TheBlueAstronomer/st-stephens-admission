@@ -4,7 +4,7 @@ describe('Phase 1 regression guards', () => {
   it('applicant actions expose typed update APIs and no generic updateApplicant patch action', async () => {
     const fs = await import('fs');
     const path = await import('path');
-    const actionsPath = path.resolve(__dirname, '../app/(staff)/applicants/actions.ts');
+    const actionsPath = path.resolve(__dirname, '../features/applicants/actions/applicant-actions.ts');
     const content = fs.readFileSync(actionsPath, 'utf-8');
 
     expect(content).toContain('export async function updateApplicantDetails(');
@@ -16,7 +16,7 @@ describe('Phase 1 regression guards', () => {
   it('typed applicant update actions retain admissions/admin authorization guards', async () => {
     const fs = await import('fs');
     const path = await import('path');
-    const actionsPath = path.resolve(__dirname, '../app/(staff)/applicants/actions.ts');
+    const actionsPath = path.resolve(__dirname, '../features/applicants/actions/applicant-actions.ts');
     const content = fs.readFileSync(actionsPath, 'utf-8');
 
     expect(content).toContain("export async function updateApplicantDetails(");
@@ -28,7 +28,7 @@ describe('Phase 1 regression guards', () => {
   it('applicant validation defines explicit update schemas for each domain slice', async () => {
     const fs = await import('fs');
     const path = await import('path');
-    const validationsPath = path.resolve(__dirname, '../lib/validations/applicant.ts');
+    const validationsPath = path.resolve(__dirname, '../features/applicants/validations/applicant.ts');
     const content = fs.readFileSync(validationsPath, 'utf-8');
 
     expect(content).toContain('export const updateApplicantDetailsSchema');
@@ -40,8 +40,8 @@ describe('Phase 1 regression guards', () => {
   it('audit writes use structured serializers in applicant and interview actions', async () => {
     const fs = await import('fs');
     const path = await import('path');
-    const applicantWorkflowsPath = path.resolve(__dirname, '../lib/services/applicant-workflows.ts');
-    const interviewWorkflowsPath = path.resolve(__dirname, '../lib/services/interview-workflows.ts');
+    const applicantWorkflowsPath = path.resolve(__dirname, '../features/applicants/services/applicant-workflows.ts');
+    const interviewWorkflowsPath = path.resolve(__dirname, '../features/interviews/services/interview-workflows.ts');
     const applicantWorkflows = fs.readFileSync(applicantWorkflowsPath, 'utf-8');
     const interviewWorkflows = fs.readFileSync(interviewWorkflowsPath, 'utf-8');
 

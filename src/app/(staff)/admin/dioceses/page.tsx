@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/db';
-import { DioceseManagementTable } from '@/components/admin/diocese-management-table';
+import { DioceseManagementTable } from '@/features/admin/components/diocese-management-table';
 
 export const dynamic = 'force-dynamic';
 

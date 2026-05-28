@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation';
 import { auth } from '@/lib/auth';
-import { getInterviewById, getInterviewForAcademicStaff } from '@/lib/queries/interviews';
-import { authorizeInterviewAccess } from '@/lib/business-rules/interview-access';
-import { InterviewDetailView } from '@/components/interview-detail-view';
+import { getInterviewById, getInterviewForAcademicStaff } from '@/features/interviews/queries/interviews';
+import { authorizeInterviewAccess } from '@/features/interviews/business-rules/interview-access';
+import { InterviewDetailView } from '@/features/interviews/components/interview-detail-view';
 
 interface InterviewDetailPageProps {
   params: Promise<{ id: string }>;

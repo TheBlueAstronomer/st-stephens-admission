@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/db';
-import { UserManagementTable } from '@/components/admin/user-management-table';
-import { InviteUserDialog } from '@/components/admin/invite-user-dialog';
+import { UserManagementTable } from '@/features/admin/components/user-management-table';
+import { InviteUserDialog } from '@/features/admin/components/invite-user-dialog';
 
 export const dynamic = 'force-dynamic';
 

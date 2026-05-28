@@ -1,9 +1,9 @@
-import { getDioceseReport, type ReportFilterParams } from '@/lib/queries/reports';
-import { getReferenceData } from '@/lib/queries/applicants';
-import { ReportFilterBar } from '@/components/reports/report-filter-bar';
-import { CsvExportButton } from '@/components/reports/csv-export-button';
-import { reportFilename } from '@/lib/services/csv-export';
-import { DioceseReportChart } from '@/components/reports/diocese-report-chart';
+import { getDioceseReport, type ReportFilterParams } from '@/features/reports/queries/reports';
+import { getReferenceData } from '@/features/applicants/queries/applicants';
+import { ReportFilterBar } from '@/features/reports/components/report-filter-bar';
+import { CsvExportButton } from '@/features/reports/components/csv-export-button';
+import { reportFilename } from '@/features/reports/services/csv-export';
+import { DioceseReportChart } from '@/features/reports/components/diocese-report-chart';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 
 export const dynamic = 'force-dynamic';

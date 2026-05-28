@@ -1,5 +1,5 @@
-import { getReferenceData } from '@/lib/queries/applicants';
-import { InterviewApplicationForm } from '@/components/forms/interview-application-form';
+import { getReferenceData } from '@/features/applicants/queries/applicants';
+import { InterviewApplicationForm } from '@/features/public-forms/components/interview-application-form';
 
 export const metadata = {
   title: "Interview Application \u2014 St Stephen\u2019s House",

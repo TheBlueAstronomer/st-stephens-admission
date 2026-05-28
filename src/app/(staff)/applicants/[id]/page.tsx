@@ -1,9 +1,9 @@
 import { notFound } from 'next/navigation';
 import { auth } from '@/lib/auth';
-import { getApplicantById } from '@/lib/queries/applicants';
-import { getAcademicStaffUsers } from '@/lib/queries/interviews';
-import { getAllDocumentTypes, getDocumentChecklist } from '@/lib/queries/documents';
-import { ApplicantDetailView } from '@/components/applicant-detail-view';
+import { getApplicantById } from '@/features/applicants/queries/applicants';
+import { getAcademicStaffUsers } from '@/features/interviews/queries/interviews';
+import { getAllDocumentTypes, getDocumentChecklist } from '@/features/documents/queries/documents';
+import { ApplicantDetailView } from '@/features/applicants/components/applicant-detail-view';
 
 interface ApplicantDetailPageProps {
   params: Promise<{ id: string }>;
