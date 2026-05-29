@@ -93,7 +93,7 @@ export function PersonalTab({ applicant }: { applicant: ApplicantFull }) {
         </p>
       </div>
 
-      <dl className="grid grid-cols-2 gap-x-8 gap-y-4">
+      <dl className="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
         <DetailField label="Legal Name" value={applicant.legalName} />
         <DetailField label="Preferred Name" value={applicant.preferredName} />
         <DetailField label="Date of Birth" value={applicant.dateOfBirth ? formatDate(applicant.dateOfBirth) : null} />
@@ -127,7 +127,7 @@ export function PersonalTab({ applicant }: { applicant: ApplicantFull }) {
       )}
 
       {/* Stat cards */}
-      <div className="grid grid-cols-3 gap-3 pt-2 border-t border-border">
+      <div className="grid grid-cols-1 gap-3 border-t border-border pt-2 sm:grid-cols-3">
         <div className="rounded-xl bg-muted/60 p-4 flex flex-col items-center gap-2 text-center">
           <GraduationCapIcon size={20} weight="light" className="text-muted-foreground" />
           <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">Programme</span>
@@ -155,7 +155,7 @@ export function PersonalTab({ applicant }: { applicant: ApplicantFull }) {
 export function EcclesialTab({ applicant }: { applicant: ApplicantFull }) {
   const ep = applicant.ecclesialProfile;
   return (
-    <dl className="grid grid-cols-2 gap-x-8 gap-y-4">
+    <dl className="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
       <DetailField label="Diocese" value={applicant.diocese?.name} />
       <DetailField label="DDO Name" value={ep?.directorOfOrdinandsName} />
       <DetailField label="DDO Email" value={ep?.directorOfOrdinandsEmail} />
@@ -170,7 +170,7 @@ export function BAPTab({ applicant }: { applicant: ApplicantFull }) {
   const bap = applicant.bapStatus;
   return (
     <div className="space-y-4">
-      <dl className="grid grid-cols-2 gap-x-8 gap-y-4">
+      <dl className="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
         <DetailField label="Stage 1 Status" value={bap?.stageOneStatus} />
         <DetailField label="Stage 1 Date" value={bap?.stageOneDate ? formatDate(bap.stageOneDate) : null} />
         <DetailField label="Stage 2 Status" value={bap?.stageTwoStatus} />
@@ -449,7 +449,7 @@ export function OfferTab({ applicant, canEdit }: { applicant: ApplicantFull; can
 
           {/* Decision details */}
           <div className="pb-5 border-b border-border">
-            <dl className="grid grid-cols-2 gap-x-8 gap-y-4">
+            <dl className="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
               <div>
                 <dt className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">Decision Date</dt>
                 <dd className="flex items-center gap-1.5 text-sm font-medium text-brand-ink">
@@ -637,7 +637,7 @@ export function RegistrationTab({ applicant, canEdit }: { applicant: ApplicantFu
       )}
 
       {/* Registration status checklist */}
-      <dl className="grid grid-cols-2 gap-x-8 gap-y-4">
+      <dl className="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
         <DetailField
           label="Registration Form Received"
           value={regReceived ? formatDate(applicant.registrationFormReceivedAt!) : null}
@@ -776,7 +776,7 @@ export function DocumentsTab({
     <TooltipProvider>
       <div className="space-y-4">
         {/* ── SharePoint folder block ──────────────────────── */}
-        <div className="flex items-center justify-between rounded-xl border border-black/6 bg-canvas px-4 py-2.5">
+        <div className="flex flex-col gap-3 rounded-xl border border-black/6 bg-canvas px-4 py-2.5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2 text-sm">
             <FolderOpenIcon size={15} weight="duotone" className="text-brand-ink/60 shrink-0" />
             <span className="font-medium text-brand-ink">SharePoint Folder</span>
@@ -787,6 +787,7 @@ export function DocumentsTab({
                 <Button
                   variant="outline"
                   size="sm"
+                  nativeButton={false}
                   className="rounded-full h-7 px-3 text-xs gap-1.5"
                   render={
                     <a
@@ -841,122 +842,125 @@ export function DocumentsTab({
 
         {/* ── Document checklist table ─────────────────────── */}
         <div
-          className="rounded-xl border border-black/6 overflow-hidden"
+          className="max-w-full overflow-hidden rounded-xl border border-black/6 [contain:paint]"
           data-testid="document-checklist"
         >
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-black/6 bg-black/2">
-                <th className="py-2.5 pl-4 pr-3 text-left text-xs font-medium text-muted-foreground w-[40%]">
-                  Document
-                </th>
-                <th className="py-2.5 px-3 text-center text-xs font-medium text-muted-foreground w-[8%]">
-                  Required
-                </th>
-                <th className="py-2.5 px-3 text-left text-xs font-medium text-muted-foreground w-[15%]">
-                  Status
-                </th>
-                <th className="py-2.5 px-3 text-left text-xs font-medium text-muted-foreground w-[17%]">
-                  Received
-                </th>
-                <th className="py-2.5 pl-3 pr-4 text-right text-xs font-medium text-muted-foreground w-[20%]">
-                  File
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {documentChecklist.map((item, idx) => (
-                <tr
-                  key={item.documentTypeId}
-                  className={`border-b border-black/4 last:border-0 transition-colors hover:bg-black/1.5 ${idx % 2 === 1 ? 'bg-black/1' : ''}`}
-                  data-testid="document-row"
-                >
-                  {/* Document name */}
-                  <td className="py-3 pl-4 pr-3">
-                    <div className="flex items-center gap-2 min-w-0">
-                      {item.isSensitive
-                        ? <LockSimpleIcon size={13} weight="bold" className="shrink-0 text-amber-500" />
-                        : <FileTextIcon size={13} weight="light" className="shrink-0 text-muted-foreground/60" />
-                      }
-                      <span className="font-medium text-brand-ink truncate">{item.name}</span>
-                      {item.status === 'WAIVED' && item.waiverNote && (
-                        <Tooltip>
-                          <TooltipTrigger render={<span className="text-muted-foreground cursor-default" />}>
-                            <WarningIcon size={12} className="text-amber-500" />
-                          </TooltipTrigger>
-                          <TooltipContent side="top" className="max-w-60">
-                            {item.waiverNote}
-                          </TooltipContent>
-                        </Tooltip>
+          <div className="max-w-full overflow-x-auto">
+            <table className="w-[720px] max-w-none text-sm">
+              <thead>
+                <tr className="border-b border-black/6 bg-black/2">
+                  <th className="py-2.5 pl-4 pr-3 text-left text-xs font-medium text-muted-foreground w-[40%]">
+                    Document
+                  </th>
+                  <th className="py-2.5 px-3 text-center text-xs font-medium text-muted-foreground w-[8%]">
+                    Required
+                  </th>
+                  <th className="py-2.5 px-3 text-left text-xs font-medium text-muted-foreground w-[15%]">
+                    Status
+                  </th>
+                  <th className="py-2.5 px-3 text-left text-xs font-medium text-muted-foreground w-[17%]">
+                    Received
+                  </th>
+                  <th className="py-2.5 pl-3 pr-4 text-right text-xs font-medium text-muted-foreground w-[20%]">
+                    File
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {documentChecklist.map((item, idx) => (
+                  <tr
+                    key={item.documentTypeId}
+                    className={`border-b border-black/4 last:border-0 transition-colors hover:bg-black/1.5 ${idx % 2 === 1 ? 'bg-black/1' : ''}`}
+                    data-testid="document-row"
+                  >
+                    {/* Document name */}
+                    <td className="py-3 pl-4 pr-3">
+                      <div className="flex items-center gap-2 min-w-0">
+                        {item.isSensitive
+                          ? <LockSimpleIcon size={13} weight="bold" className="shrink-0 text-amber-500" />
+                          : <FileTextIcon size={13} weight="light" className="shrink-0 text-muted-foreground/60" />
+                        }
+                        <span className="font-medium text-brand-ink truncate">{item.name}</span>
+                        {item.status === 'WAIVED' && item.waiverNote && (
+                          <Tooltip>
+                            <TooltipTrigger render={<span className="text-muted-foreground cursor-default" />}>
+                              <WarningIcon size={12} className="text-amber-500" />
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="max-w-60">
+                              {item.waiverNote}
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                      </div>
+                      {item.notes && item.status !== 'WAIVED' && (
+                        <p className="mt-0.5 pl-5 text-xs text-muted-foreground">{item.notes}</p>
                       )}
-                    </div>
-                    {item.notes && item.status !== 'WAIVED' && (
-                      <p className="mt-0.5 pl-5 text-xs text-muted-foreground">{item.notes}</p>
-                    )}
-                  </td>
+                    </td>
 
-                  {/* Required */}
-                  <td className="py-3 px-3 text-center">
-                    {item.isRequired
-                      ? <PhosphorCheckIcon size={14} weight="bold" className="mx-auto text-brand-ink" />
-                      : <MinusIcon size={14} className="mx-auto text-muted-foreground/40" />
-                    }
-                  </td>
+                    {/* Required */}
+                    <td className="py-3 px-3 text-center">
+                      {item.isRequired
+                        ? <PhosphorCheckIcon size={14} weight="bold" className="mx-auto text-brand-ink" />
+                        : <MinusIcon size={14} className="mx-auto text-muted-foreground/40" />
+                      }
+                    </td>
 
-                  {/* Status badge */}
-                  <td className="py-3 px-3">
-                    <DocumentStatusBadge status={item.status} />
-                  </td>
+                    {/* Status badge */}
+                    <td className="py-3 px-3">
+                      <DocumentStatusBadge status={item.status} />
+                    </td>
 
-                  {/* Received date */}
-                  <td className="py-3 px-3 font-mono text-xs tabular-nums text-muted-foreground">
-                    {item.status === 'RECEIVED' && item.receivedAt
-                      ? formatDate(item.receivedAt, { day: 'numeric', month: 'short', year: 'numeric' })
-                      : <span className="not-mono">—</span>
-                    }
-                  </td>
+                    {/* Received date */}
+                    <td className="py-3 px-3 font-mono text-xs tabular-nums text-muted-foreground">
+                      {item.status === 'RECEIVED' && item.receivedAt
+                        ? formatDate(item.receivedAt, { day: 'numeric', month: 'short', year: 'numeric' })
+                        : <span className="not-mono">—</span>
+                      }
+                    </td>
 
-                  {/* File / actions */}
-                  <td className="py-3 pl-3 pr-4">
-                    <div className="flex items-center justify-end gap-1">
-                      {item.status === 'RECEIVED' && item.storageUrl && (
+                    {/* File / actions */}
+                    <td className="py-3 pl-3 pr-4">
+                      <div className="flex items-center justify-end gap-1">
+                        {item.status === 'RECEIVED' && item.storageUrl && (
                         <Button
                           variant="ghost"
                           size="sm"
+                          nativeButton={false}
                           className="h-6 px-1.5 text-xs gap-1 text-brand-ink"
                           render={
-                            <a href={item.storageUrl} target="_blank" rel="noopener noreferrer" />
-                          }
-                        >
-                          <ArrowSquareOutIcon size={12} weight="bold" />
-                          View
-                        </Button>
-                      )}
-                      {canEdit && item.status === 'OUTSTANDING' && (
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          className="h-6 w-6 rounded-full text-brand-ink"
-                          onClick={() => setUploadItem(item)}
-                          aria-label="Add document"
-                        >
-                          <PlusIcon size={13} weight="bold" />
-                        </Button>
-                      )}
-                      {canEdit && (
-                        <DocRowActions
-                          applicantId={applicant.id}
-                          item={item}
-                          onUpload={() => setUploadItem(item)}
-                          onWaive={() => setWaiveItem(item)}
-                        />
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                              <a href={item.storageUrl} target="_blank" rel="noopener noreferrer" />
+                            }
+                          >
+                            <ArrowSquareOutIcon size={12} weight="bold" />
+                            View
+                          </Button>
+                        )}
+                        {canEdit && item.status === 'OUTSTANDING' && (
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            className="h-6 w-6 rounded-full text-brand-ink"
+                            onClick={() => setUploadItem(item)}
+                            aria-label="Add document"
+                          >
+                            <PlusIcon size={13} weight="bold" />
+                          </Button>
+                        )}
+                        {canEdit && (
+                          <DocRowActions
+                            applicantId={applicant.id}
+                            item={item}
+                            onUpload={() => setUploadItem(item)}
+                            onWaive={() => setWaiveItem(item)}
+                          />
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* ── Dialogs / Sheets ─────────────────────────────── */}

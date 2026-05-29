@@ -22,6 +22,11 @@ import type { DocumentChecklistItem } from '@/features/documents/queries/documen
 import { useActionExecutor } from '@/hooks/use-action-executor';
 import { getApplicantProgressStages } from '@/features/admissions-lifecycle/view-models/applicant-progress';
 import {
+  ApplicantProfileMotion,
+  ApplicantTabPanelMotion,
+  CurrentStagePulse,
+} from '@/features/applicants/components/detail/applicant-detail-motion';
+import {
   BAPTab,
   DocumentsTab,
   EcclesialTab,
@@ -111,9 +116,9 @@ export function ApplicantDetailView({ applicant, canEdit, availableInterviewers 
         <span className="text-brand-ink font-medium">{applicant.legalName}</span>
       </nav>
 
-      <div className="flex gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[16rem_minmax(0,1fr)]">
         {/* Left column — light panel */}
-        <div className="w-64 shrink-0 sticky top-6 self-start overflow-hidden rounded-2xl">
+        <ApplicantProfileMotion className="w-full self-start overflow-hidden rounded-2xl lg:sticky lg:top-6">
           {/* Avatar and identity */}
           <div className="p-6 space-y-4">
             <Avatar className="h-16 w-16 mx-auto">
@@ -165,8 +170,9 @@ export function ApplicantDetailView({ applicant, canEdit, availableInterviewers 
                         <CheckIcon size={10} weight="bold" className="text-white" />
                       </div>
                     ) : stage.isCurrent ? (
-                      <div className="h-[18px] w-[18px] rounded-full border-2 border-brand-ink flex items-center justify-center shrink-0">
-                        <div className="h-[6px] w-[6px] rounded-full bg-brand-ink" />
+                      <div className="relative h-[18px] w-[18px] rounded-full border-2 border-brand-ink flex items-center justify-center shrink-0">
+                        <CurrentStagePulse />
+                        <div className="relative h-[6px] w-[6px] rounded-full bg-brand-ink" />
                       </div>
                     ) : (
                       <div className="h-[18px] w-[18px] rounded-full border-2 border-border shrink-0" />
@@ -202,16 +208,25 @@ export function ApplicantDetailView({ applicant, canEdit, availableInterviewers 
             })}
           </div>
 
-          {/* OneDrive Folder link */}
+          {/* SharePoint folder link */}
           <div className="border-t border-border" />
           <div className="px-6 py-3">
-            <a
-              href="#"
-              className="flex items-center gap-2 text-xs text-muted-foreground hover:text-brand-ink transition-colors"
-            >
-              <FolderSimpleIcon size={14} weight="light" className="shrink-0" />
-              OneDrive Folder
-            </a>
+            {applicant.sharePointFolderUrl ? (
+              <a
+                href={applicant.sharePointFolderUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-brand-ink"
+              >
+                <FolderSimpleIcon size={14} weight="light" className="shrink-0" />
+                SharePoint Folder
+              </a>
+            ) : (
+              <span className="flex items-center gap-2 text-xs text-muted-foreground/70">
+                <FolderSimpleIcon size={14} weight="light" className="shrink-0" />
+                SharePoint Folder - Not linked
+              </span>
+            )}
           </div>
 
           {/* Quick Actions */}
@@ -243,10 +258,10 @@ export function ApplicantDetailView({ applicant, canEdit, availableInterviewers 
               </div>
             </>
           )}
-        </div>
+        </ApplicantProfileMotion>
 
         {/* Right content */}
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0">
           <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val)} className="gap-4">
             <div className="overflow-x-auto">
               <TabsList variant="line" className="w-max min-w-full flex gap-0 rounded-none bg-transparent px-0 h-auto pb-0">
@@ -262,16 +277,52 @@ export function ApplicantDetailView({ applicant, canEdit, availableInterviewers 
               </TabsList>
             </div>
 
-            <div className="rounded-2xl border border-border bg-background p-6 shadow-sm">
-              <TabsContent value="personal"><PersonalTab applicant={applicant} /></TabsContent>
-              <TabsContent value="ecclesial"><EcclesialTab applicant={applicant} /></TabsContent>
-              <TabsContent value="bap"><BAPTab applicant={applicant} /></TabsContent>
-              <TabsContent value="interview"><InterviewTab applicant={applicant} canEdit={canEdit} availableInterviewers={availableInterviewers} /></TabsContent>
-              <TabsContent value="offer"><OfferTab applicant={applicant} canEdit={canEdit} /></TabsContent>
-              <TabsContent value="registration"><RegistrationTab applicant={applicant} canEdit={canEdit} /></TabsContent>
-              <TabsContent value="documents"><DocumentsTab applicant={applicant} canEdit={canEdit} allDocumentTypes={allDocumentTypes} documentChecklist={documentChecklist} /></TabsContent>
-              <TabsContent value="notes"><NotesTab /></TabsContent>
-              <TabsContent value="timeline"><TimelineTab applicant={applicant} /></TabsContent>
+            <div className="rounded-2xl border border-border bg-background p-4 shadow-sm md:p-6">
+              <TabsContent value="personal">
+                <ApplicantTabPanelMotion active={activeTab === 'personal'} motionKey="personal">
+                  <PersonalTab applicant={applicant} />
+                </ApplicantTabPanelMotion>
+              </TabsContent>
+              <TabsContent value="ecclesial">
+                <ApplicantTabPanelMotion active={activeTab === 'ecclesial'} motionKey="ecclesial">
+                  <EcclesialTab applicant={applicant} />
+                </ApplicantTabPanelMotion>
+              </TabsContent>
+              <TabsContent value="bap">
+                <ApplicantTabPanelMotion active={activeTab === 'bap'} motionKey="bap">
+                  <BAPTab applicant={applicant} />
+                </ApplicantTabPanelMotion>
+              </TabsContent>
+              <TabsContent value="interview">
+                <ApplicantTabPanelMotion active={activeTab === 'interview'} motionKey="interview">
+                  <InterviewTab applicant={applicant} canEdit={canEdit} availableInterviewers={availableInterviewers} />
+                </ApplicantTabPanelMotion>
+              </TabsContent>
+              <TabsContent value="offer">
+                <ApplicantTabPanelMotion active={activeTab === 'offer'} motionKey="offer">
+                  <OfferTab applicant={applicant} canEdit={canEdit} />
+                </ApplicantTabPanelMotion>
+              </TabsContent>
+              <TabsContent value="registration">
+                <ApplicantTabPanelMotion active={activeTab === 'registration'} motionKey="registration">
+                  <RegistrationTab applicant={applicant} canEdit={canEdit} />
+                </ApplicantTabPanelMotion>
+              </TabsContent>
+              <TabsContent value="documents">
+                <ApplicantTabPanelMotion active={activeTab === 'documents'} motionKey="documents">
+                  <DocumentsTab applicant={applicant} canEdit={canEdit} allDocumentTypes={allDocumentTypes} documentChecklist={documentChecklist} />
+                </ApplicantTabPanelMotion>
+              </TabsContent>
+              <TabsContent value="notes">
+                <ApplicantTabPanelMotion active={activeTab === 'notes'} motionKey="notes">
+                  <NotesTab />
+                </ApplicantTabPanelMotion>
+              </TabsContent>
+              <TabsContent value="timeline">
+                <ApplicantTabPanelMotion active={activeTab === 'timeline'} motionKey="timeline">
+                  <TimelineTab applicant={applicant} />
+                </ApplicantTabPanelMotion>
+              </TabsContent>
             </div>
           </Tabs>
         </div>
