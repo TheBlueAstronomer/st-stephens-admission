@@ -15,7 +15,7 @@
   --color-accent-gold: var(--accent-gold);
   --color-on-primary-container: var(--on-primary-container);
   --color-success: var(--success);
-  --font-sans: var(--font-inter), var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
@@ -57,7 +57,6 @@
 }
 
 :root {
-  --font-inter: "Inter";
   --font-geist-sans: "Geist";
   --font-geist-mono: "Geist Mono";
 
@@ -212,6 +211,15 @@
     @apply font-sans;
   }
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-heading), serif;
+    font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+  }
+}
+
+@keyframes public-submit-shimmer {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(220%);
   }
 }

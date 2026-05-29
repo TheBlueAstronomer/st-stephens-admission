@@ -8,13 +8,17 @@
 ## Design Overrides for Public Forms
 
 - **Background:** Pure `#FFFFFF` — maximum legibility on all devices
-- **Container:** Max-width `640px` centred, `px-4` on mobile
-- **Font:** `Plus Jakarta Sans` for headings, `Geist` for body/inputs
+- **Design dials:** Public-form tuned `DESIGN_VARIANCE 5`, `MOTION_INTENSITY 6`, `VISUAL_DENSITY 4`
+- **Container:** Form column remains max-width `640px`; desktop uses an asymmetric outer grid with a quiet progress/context rail; mobile collapses to one column with `px-4`
+- **Font:** `Geist` for headings, body, and inputs; `Geist Mono` for step numbers and reference metadata
 - **No sidebar, no navigation rail**
 - **Header:** Minimal — SSH crest + institution name, no links
 - **Footer:** "© St Stephen's House, Oxford" + accessibility statement link
 - **Progress:** Multi-step `Progress` bar at top for both forms
-- **Animations:** Entry only on step transition — `translate-x-8 opacity-0` → `translate-x-0 opacity-100`; never on scroll (mobile performance)
+- **Desktop context rail:** `md+` only, border-left grouping, current step indicated with a brand-ink animated marker; no card shell
+- **Motion:** Use Motion for React (`motion/react`) in isolated client leaf components. Step transitions, progress marker movement, submit loading, and confirmation success use transform/opacity only and respect reduced-motion preferences
+- **Colors:** Token-only palette for implementation: brand navy, neutral surfaces, `accent-gold`, `success`, and semantic destructive. No raw blue/emerald/gray screen-specific utilities
+- **Controls:** Phosphor icons for button arrows, alerts, file upload, checkmarks, and select/checkbox glyphs. Text arrows and emoji are not used in markup
 
 ---
 
@@ -32,12 +36,12 @@
 │  Eyebrow: "Interview Application"                │
 │  H1: Personal Details                            │
 │                                                  │
-│  [██████░░░░░░░░░░░░░] Step 1 of 6              │
+│  [progress bar] Step 1 of 6                     │
 │                                                  │
 │  Applicant ID (if known)  [__________________]   │
 │  Legal Name*              [__________________]   │
 │  Preferred Name           [__________________]   │
-│  Date of Birth*           [📅________________]   │
+│  Date of Birth*           [date input]           │
 │  Email*                   [__________________]   │
 │  Phone*                   [__________________]   │
 │  Address Line 1*          [__________________]   │
@@ -46,7 +50,7 @@
 │  Postcode*                [__________________]   │
 │  Country*                 [▾_________________]   │
 │                                                  │
-│                          [Next: BAP Status →]    │
+│                          [Next: BAP Status][>]   │
 │                                                  │
 └──────────────────────────────────────────────────┘
 ```
@@ -55,28 +59,28 @@
 
 ```
 │  H2: BAP Status                                  │
-│  [████████░░░░░░░░░░] Step 2 of 6               │
+│  [progress bar] Step 2 of 6                     │
 │                                                  │
 │  Diocese*                 [▾_________________]   │
 │  Director of Ordinands*   [__________________]   │
 │  DDO Email*               [__________________]   │
 │                                                  │
 │  Stage 1 BAP Status*      [▾_________________]   │
-│  Stage 1 BAP Date          [📅________________]  │
+│  Stage 1 BAP Date          [date input]          │
 │                                                  │
 │  ┌──────────────────────────────────────────┐    │
-│  │ ℹ️ Stage 1 BAP must be Completed or      │    │
+│  │ [Info icon] Stage 1 BAP must be Completed│    │
 │  │ Scheduled to proceed to interview.       │    │
 │  └──────────────────────────────────────────┘    │
 │                                                  │
-│  [← Back]              [Next: Academic History →]│
+│  [< Back]              [Next: Academic History][>]│
 ```
 
 ### Step 3 of 6 — Academic History
 
 ```
 │  H2: Academic History                            │
-│  [████████████░░░░░░] Step 3 of 6               │
+│  [progress bar] Step 3 of 6                     │
 │                                                  │
 │  Programme Interest*      [▾_________________]   │
 │  Undergraduate Degree     [__________________]   │
@@ -85,7 +89,7 @@
 │  Postgraduate Degree      [__________________]   │
 │  Postgraduate University  [__________________]   │
 │                                                  │
-│  [← Back]              [Next: References →]      │
+│  [< Back]              [Next: References][>]     │
 ```
 
 ### Step 4 of 6 — References
@@ -101,7 +105,7 @@
 │  Name*    [___________]  Email* [___________]    │
 │  Institution* [_______]                          │
 │                                                  │
-│  [← Back]         [Next: Supporting Info →]      │
+│  [< Back]         [Next: Supporting Info][>]     │
 ```
 
 ### Step 5 of 6 — Supporting Information & Uploads
@@ -116,33 +120,33 @@
 │  ── Document Uploads ─────────────────────────   │
 │                                                  │
 │  GCSE Transcript                                 │
-│  [↑ Upload file]  or  drag here                  │
+│  [Upload icon] Upload file or drag here          │
 │                                                  │
 │  A-Level Transcript                              │
-│  [↑ Upload file]  or  drag here                  │
+│  [Upload icon] Upload file or drag here          │
 │                                                  │
 │  Undergraduate Transcript                        │
-│  [↑ Upload file]  or  drag here                  │
+│  [Upload icon] Upload file or drag here          │
 │                                                  │
-│  [← Back]             [Next: Declaration →]      │
+│  [< Back]             [Next: Declaration][>]     │
 ```
 
 ### Step 6 of 6 — Consent and Declaration
 
 ```
 │  H2: Declaration                                 │
-│  [████████████████████] Step 6 of 6             │
+│  [progress bar] Step 6 of 6                     │
 │                                                  │
 │  [ScrollArea — declaration text]                 │
 │  I confirm that the information provided...      │
 │                                                  │
-│  ☐ I confirm I have read and agree to the        │
+│  [ ] I confirm I have read and agree to the      │
 │    above declaration.*                           │
 │                                                  │
-│  ☐ I consent to St Stephen's House processing    │
+│  [ ] I consent to St Stephen's House processing  │
 │    my personal data for admissions purposes.*    │
 │                                                  │
-│  [← Back]               [Submit Application →]  │
+│  [< Back]               [Submit Application]     │
 ```
 
 ### Submission Confirmation Screen
@@ -151,16 +155,14 @@
 ┌──────────────────────────────────────────────────┐
 │  [SSH Crest]                                     │
 │                                                  │
-│       ✓  (large Phosphor CheckCircle, green)     │
+│       [Phosphor CheckCircle, success token]      │
 │                                                  │
 │  H1: Application Submitted                       │
 │                                                  │
 │  Thank you, James. Your interview application    │
 │  has been received by St Stephen's House.        │
 │                                                  │
-│  The admissions team will be in touch with       │
-│  next steps. Please retain this for your         │
-│  records:                                        │
+│  Please retain this for your records:            │
 │                                                  │
 │  Reference: SSH-2025-0012                        │
 │  Submitted: Mon 14 Jul 2025 at 10:32am           │
@@ -174,14 +176,15 @@
 | Step progress | `Progress` | Animated fill per step |
 | All text inputs | `Form`, `FormField`, `FormControl`, `Input`, `Label`, `FormMessage` | React Hook Form + Zod; `FormMessage` for inline errors |
 | Select fields | `Select`, `SelectTrigger`, `SelectContent`, `SelectItem` | Diocese, Programme, BAP status |
-| Date fields | `Popover` + `Calendar` | Date of birth, BAP date |
+| Date fields | Native date input | Date of birth, BAP date |
 | Country | `Select` (searchable) | Combobox pattern |
 | Textarea | `Textarea` | With word-count helper text |
 | File upload zones | Custom `div` (drag + click) | Drop area + hidden `<input type="file">`; `Progress` bar per file; file name shown after upload |
 | Checkboxes (declaration) | `Checkbox`, `Label` | Required; `FormMessage` if unchecked on submit |
-| Nav buttons | `Button` | Back: `variant="ghost"` pill; Next/Submit: navy fill pill |
-| Info callout | `Alert` | Blue-tint, Phosphor `Info` icon |
-| Success screen checkmark | Phosphor `CheckCircle` | 64px, `text-[#1A6B3A]`; scale-in animation `scale-0` → `scale-100` |
+| Nav buttons | `Button` | Back: `variant="ghost"` with Phosphor arrow icon; Next/Submit: navy fill pill with Phosphor arrow or submit loading shimmer |
+| Info callout | `Alert` | `accent-gold` tint, Phosphor `Info` icon |
+| Desktop context rail | Custom Motion leaf component | `md+` only; asymmetric progress rail with animated current-step marker |
+| Success screen checkmark | Motion leaf component + Phosphor `CheckCircle` | 64px, `success` token, scale/fade animation with reduced-motion fallback |
 
 ---
 

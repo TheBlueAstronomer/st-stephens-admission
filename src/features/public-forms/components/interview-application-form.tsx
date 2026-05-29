@@ -1,10 +1,14 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { useForm, type Resolver } from 'react-hook-form';
+import { useForm, useWatch, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { InfoIcon } from '@phosphor-icons/react';
+import { ArrowLeftIcon, ArrowRightIcon, InfoIcon } from '@phosphor-icons/react';
 import { PublicFormLayout } from '@/features/public-forms/components/public-form-layout';
+import {
+  PublicFormStepTransition,
+  SubmitButtonContent,
+} from '@/features/public-forms/components/public-form-motion';
 import { FileUploadField } from '@/features/public-forms/components/file-upload-field';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -46,6 +50,15 @@ const DEGREE_CLASSIFICATIONS = [
   { value: 'PASS', label: 'Pass' },
   { value: 'OTHER', label: 'Other' },
 ];
+
+const INTERVIEW_FORM_RAIL_LABELS = [
+  'Identity and contact',
+  'BAP readiness',
+  'Academic background',
+  'Reference details',
+  'Statement and documents',
+  'Declaration',
+] as const;
 
 export function InterviewApplicationForm({ dioceses, programmes }: Props) {
   const [currentStep, setCurrentStep] = useState(0);
@@ -100,8 +113,8 @@ export function InterviewApplicationForm({ dioceses, programmes }: Props) {
     trigger,
     handleSubmit,
     formState: { errors },
-    watch,
     setValue,
+    control,
   } = form;
 
   const totalSteps = INTERVIEW_FORM_STEP_LABELS.length;
@@ -160,7 +173,9 @@ export function InterviewApplicationForm({ dioceses, programmes }: Props) {
     [uploadedFiles],
   );
 
-  const personalStatement = watch('personalStatement') ?? '';
+  const personalStatement = useWatch({ control, name: 'personalStatement' }) ?? '';
+  const declarationAgreed = useWatch({ control, name: 'declarationAgreed' });
+  const dataConsentAgreed = useWatch({ control, name: 'dataConsentAgreed' });
   const wordCount = personalStatement.split(/\s+/).filter(Boolean).length;
 
   const stepTitle = INTERVIEW_FORM_STEP_LABELS[currentStep];
@@ -171,14 +186,20 @@ export function InterviewApplicationForm({ dioceses, programmes }: Props) {
       title={stepTitle}
       currentStep={currentStep + 1}
       totalSteps={totalSteps}
+      steps={INTERVIEW_FORM_STEP_LABELS}
+      railSteps={INTERVIEW_FORM_RAIL_LABELS}
     >
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
-        {/* Step 1: Personal Details */}
-        {currentStep === 0 && (
-          <FieldGroup>
+        <PublicFormStepTransition step={currentStep}>
+          {/* Step 1: Personal Details */}
+          {currentStep === 0 && (
+            <FieldGroup>
             <Field>
               <FieldLabel htmlFor="applicantId">Applicant ID (if known)</FieldLabel>
               <Input id="applicantId" placeholder="SSH-2025-XXXX" {...register('applicantId')} />
+              <p className="text-sm text-muted-foreground">
+                Leave blank if the admissions team has not issued one yet.
+              </p>
             </Field>
 
             <Field>
@@ -212,6 +233,9 @@ export function InterviewApplicationForm({ dioceses, programmes }: Props) {
                 aria-describedby={errors.dateOfBirth ? 'dob-error' : undefined}
                 {...register('dateOfBirth')}
               />
+              <p className="text-sm text-muted-foreground">
+                Use the date shown on your identity documents.
+              </p>
               {errors.dateOfBirth && (
                 <FieldError id="dob-error">{errors.dateOfBirth.message}</FieldError>
               )}
@@ -319,12 +343,12 @@ export function InterviewApplicationForm({ dioceses, programmes }: Props) {
                 <FieldError id="country-error">{errors.country.message}</FieldError>
               )}
             </Field>
-          </FieldGroup>
-        )}
+            </FieldGroup>
+          )}
 
-        {/* Step 2: BAP Status */}
-        {currentStep === 1 && (
-          <FieldGroup>
+          {/* Step 2: BAP Status */}
+          {currentStep === 1 && (
+            <FieldGroup>
             <Field>
               <FieldLabel htmlFor="diocese">
                 Diocese <span className="text-destructive">*</span>
@@ -407,20 +431,20 @@ export function InterviewApplicationForm({ dioceses, programmes }: Props) {
               <Input id="bapStageOneDate" type="date" {...register('bapStageOneDate')} />
             </Field>
 
-            <Alert className="border-blue-200 bg-blue-50 text-blue-900">
+            <Alert className="border-accent-gold/35 bg-accent-gold/10 text-brand-ink shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]">
               <div className="flex gap-2 items-start">
-                <InfoIcon size={18} className="text-blue-600 shrink-0 mt-0.5" />
+                <InfoIcon size={18} className="text-accent-gold shrink-0 mt-0.5" />
                 <p className="text-sm">
                   Stage 1 BAP must be Completed or Scheduled to proceed to interview.
                 </p>
               </div>
             </Alert>
-          </FieldGroup>
-        )}
+            </FieldGroup>
+          )}
 
-        {/* Step 3: Academic History */}
-        {currentStep === 2 && (
-          <FieldGroup>
+          {/* Step 3: Academic History */}
+          {currentStep === 2 && (
+            <FieldGroup>
             <Field>
               <FieldLabel htmlFor="programmeInterest">
                 Programme Interest <span className="text-destructive">*</span>
@@ -479,12 +503,12 @@ export function InterviewApplicationForm({ dioceses, programmes }: Props) {
               <FieldLabel htmlFor="postgraduateUniversity">Postgraduate University</FieldLabel>
               <Input id="postgraduateUniversity" {...register('postgraduateUniversity')} />
             </Field>
-          </FieldGroup>
-        )}
+            </FieldGroup>
+          )}
 
-        {/* Step 4: References */}
-        {currentStep === 3 && (
-          <FieldGroup>
+          {/* Step 4: References */}
+          {currentStep === 3 && (
+            <FieldGroup>
             <h3 className="text-base font-semibold text-foreground">Academic Reference 1</h3>
 
             <Field>
@@ -533,7 +557,7 @@ export function InterviewApplicationForm({ dioceses, programmes }: Props) {
               )}
             </Field>
 
-            <div className="my-2 border-t border-gray-100" />
+            <div className="my-2 border-t border-border/25" />
 
             <h3 className="text-base font-semibold text-foreground">Academic Reference 2</h3>
 
@@ -582,12 +606,12 @@ export function InterviewApplicationForm({ dioceses, programmes }: Props) {
                 <FieldError id="ref2Inst-error">{errors.ref2Institution.message}</FieldError>
               )}
             </Field>
-          </FieldGroup>
-        )}
+            </FieldGroup>
+          )}
 
-        {/* Step 5: Supporting Information & Uploads */}
-        {currentStep === 4 && (
-          <FieldGroup>
+          {/* Step 5: Supporting Information & Uploads */}
+          {currentStep === 4 && (
+            <FieldGroup>
             <Field>
               <FieldLabel htmlFor="personalStatement">
                 Personal Statement <span className="text-destructive">*</span>
@@ -607,7 +631,7 @@ export function InterviewApplicationForm({ dioceses, programmes }: Props) {
               )}
             </Field>
 
-            <div className="my-2 border-t border-gray-100" />
+            <div className="my-2 border-t border-border/25" />
             <h3 className="text-base font-semibold text-foreground">Document Uploads</h3>
 
             <FileUploadField
@@ -636,12 +660,12 @@ export function InterviewApplicationForm({ dioceses, programmes }: Props) {
                 setUploadedFiles((prev) => ({ ...prev, undergradTranscript: files }))
               }
             />
-          </FieldGroup>
-        )}
+            </FieldGroup>
+          )}
 
-        {/* Step 6: Consent & Declaration */}
-        {currentStep === 5 && (
-          <FieldGroup>
+          {/* Step 6: Consent & Declaration */}
+          {currentStep === 5 && (
+            <FieldGroup>
             <div className="max-h-48 overflow-y-auto rounded-lg border border-input bg-muted/20 p-4 text-sm text-foreground leading-relaxed">
               <p className="mb-3">
                 I confirm that the information provided in this application is true and complete to
@@ -663,7 +687,7 @@ export function InterviewApplicationForm({ dioceses, programmes }: Props) {
               <div className="flex items-start gap-3">
                 <Checkbox
                   id="declarationAgreed"
-                  checked={watch('declarationAgreed')}
+                  checked={!!declarationAgreed}
                   onCheckedChange={(checked) => setValue('declarationAgreed', checked, { shouldValidate: true })}
                   aria-invalid={!!errors.declarationAgreed}
                   aria-describedby={errors.declarationAgreed ? 'decl-error' : undefined}
@@ -682,7 +706,7 @@ export function InterviewApplicationForm({ dioceses, programmes }: Props) {
               <div className="flex items-start gap-3">
                 <Checkbox
                   id="dataConsentAgreed"
-                  checked={watch('dataConsentAgreed')}
+                  checked={!!dataConsentAgreed}
                   onCheckedChange={(checked) => setValue('dataConsentAgreed', checked, { shouldValidate: true })}
                   aria-invalid={!!errors.dataConsentAgreed}
                   aria-describedby={errors.dataConsentAgreed ? 'consent-error' : undefined}
@@ -696,8 +720,9 @@ export function InterviewApplicationForm({ dioceses, programmes }: Props) {
                 <FieldError id="consent-error">{errors.dataConsentAgreed.message}</FieldError>
               )}
             </Field>
-          </FieldGroup>
-        )}
+            </FieldGroup>
+          )}
+        </PublicFormStepTransition>
 
         {/* Submit Error */}
         {submitError && (
@@ -707,22 +732,33 @@ export function InterviewApplicationForm({ dioceses, programmes }: Props) {
         )}
 
         {/* Navigation Buttons */}
-        <div className="mt-8 flex justify-between">
+        <div className="mt-8 flex items-center justify-between gap-3">
           {currentStep > 0 ? (
-            <Button type="button" variant="ghost" onClick={handleBack}>
-              &larr; Back
+            <Button type="button" variant="ghost" onClick={handleBack} className="gap-2">
+              <ArrowLeftIcon size={16} aria-hidden="true" />
+              Back
             </Button>
           ) : (
             <div />
           )}
 
           {currentStep < totalSteps - 1 ? (
-            <Button type="button" onClick={handleNext}>
-              Next: {INTERVIEW_FORM_STEP_LABELS[currentStep + 1]} &rarr;
+            <Button type="button" onClick={handleNext} className="ml-auto gap-2">
+              <span>Next: {INTERVIEW_FORM_STEP_LABELS[currentStep + 1]}</span>
+              <ArrowRightIcon size={16} aria-hidden="true" />
             </Button>
           ) : (
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Submitting...' : 'Submit Application'}
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              aria-busy={isSubmitting}
+              className="ml-auto min-w-[10.75rem] gap-2"
+            >
+              <SubmitButtonContent
+                isSubmitting={isSubmitting}
+                idleLabel="Submit Application"
+                submittingLabel="Submitting application"
+              />
             </Button>
           )}
         </div>
